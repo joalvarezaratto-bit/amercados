@@ -36,6 +36,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             python amercados.py send --gate
             python amercados.py flash --gate
+            python amercados.py health
           else
             python amercados.py send
           fi

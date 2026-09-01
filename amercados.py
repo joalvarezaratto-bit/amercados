@@ -13,6 +13,7 @@ Comandos:
   python3 amercados.py send --gate  -> solo envia si es la hora (dias habiles, 1 vez/dia)
   python3 amercados.py flash        -> flash intradia: precios + titulares nuevos (sin IA)
   python3 amercados.py flash --gate -> solo a las horas FLASH_HORAS, una vez cada una
+  python3 amercados.py health       -> avisa si hoy no salio el informe (lo usa la nube)
   python3 amercados.py selftest     -> prueba todo sin enviar nada
 """
 import os
@@ -79,7 +80,21 @@ def construir(sin_ia=False, verbose=True):
     N = noticias.recolectar()
     if verbose:
         print("   " + " · ".join(f"{s}:{len(v)}" for s, v in N.items()))
+    # leer el cuerpo de las notas mas relevantes (solo sirve si hay IA que lo lea)
+    if C.USE_AI and C.ANTHROPIC_API_KEY and C.LEER_NOTAS > 0:
+        import lector
+        orden = N.get("relevante", []) + [x for s, its in N.items() if s != "relevante" for x in its[:3]]
+        vistos, lista = set(), []
+        for it in orden:
+            if id(it) not in vistos:
+                vistos.add(id(it)); lista.append(it)
+        n_ok = lector.enriquecer(lista, max_notas=C.LEER_NOTAS, tiempo_max=C.LEER_TIEMPO_MAX)
+        # los mismos dicts estan en las secciones (misma referencia) -> ya quedaron enriquecidos
+        if verbose:
+            print(f"   notas leídas: {n_ok} con texto de {min(len(lista), C.LEER_NOTAS)}")
+    if verbose:
         print(f"   redactando ({'IA ' + C.AI_MODEL if C.USE_AI else 'reglas'})...")
+    _avisar_salud(D, N, ahora, "informe")
     cont = redactor.redactar(D, N, A, meta, TZ)
     if verbose:
         print(f"   modo: {cont['modo']}" + (f" ({meta.get('ia_motivo')})" if cont["modo"] != "ia" else f" ({meta.get('ia_uso')})"))
@@ -132,6 +147,63 @@ def enviar(ruta, cont, meta):
     return ok and ok2
 
 
+def _avisar_salud(D, N, ahora, origen):
+    """Si faltan datos clave o no hay titulares, avisa por Telegram (1 vez/dia)."""
+    import telegram as T
+    problemas = []
+    if not (D.get("yahoo") or {}).get("usdclp"):
+        problemas.append("Yahoo Finance no entregó el dólar")
+    faltan = [k for k, v in (D.get("yahoo") or {}).items() if v is None]
+    if len(faltan) >= 5:
+        problemas.append(f"Yahoo sin dato para {len(faltan)} instrumentos ({', '.join(faltan[:5])}…)")
+    if not D.get("chile"):
+        problemas.append("mindicador.cl no respondió (UF, observado, TPM)")
+    if not N.get("relevante"):
+        problemas.append("Google Noticias no devolvió titulares")
+    if not problemas:
+        return
+    s = _state()
+    if s.get("aviso_salud") == ahora.strftime("%Y-%m-%d"):
+        return
+    T.send(f"⚠️ <b>{C.NOMBRE} · aviso</b> ({origen} {ahora:%H:%M})\n" + "\n".join(f"• {p}" for p in problemas)
+           + "\n<i>El envío salió igual, con lo que había.</i>")
+    s["aviso_salud"] = ahora.strftime("%Y-%m-%d")
+    _save_state(s)
+
+
+def health():
+    """Chequeo desde la nube: si ya pasó la ventana del informe y no se envió
+    hoy (día hábil), avisa por Telegram una vez."""
+    import telegram as T
+    ahora = dt.datetime.now(TZ)
+    if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
+        return
+    s = _state()
+    hoy = ahora.strftime("%Y-%m-%d")
+    if ahora.hour >= C.REPORT_HORA + 2 and s.get("ultimo_envio") != hoy and s.get("aviso_faltante") != hoy:
+        T.send(f"⚠️ <b>{C.NOMBRE}</b>: hoy {ahora:%d-%m} NO se envió el informe de la mañana "
+               f"(revisa GitHub Actions o corre <code>python3 amercados.py send</code>).")
+        s["aviso_faltante"] = hoy
+        _save_state(s)
+        print("aviso de informe faltante enviado")
+    else:
+        print("salud ok")
+
+
+def _guardar_cierre_ipsa(D, ahora):
+    """Al flash de la tarde: si la prensa ya publicó el cierre EXACTO del IPSA
+    de hoy, se guarda para que el informe de mañana lo use (sin '≈')."""
+    ip = D.get("ipsa")
+    if not ip or ip.get("aprox"):
+        return
+    if ip.get("market_time") and dt.datetime.fromtimestamp(ip["market_time"], TZ).date() != ahora.date():
+        return
+    s = _state()
+    s["ipsa_cierre"] = {"fecha": ahora.strftime("%Y-%m-%d"), "price": ip["price"], "chg": ip.get("chg"),
+                        "fuente": ip.get("fuente"), "link": ip.get("link"), "texto": ip.get("texto")}
+    _save_state(s)
+
+
 def _toca_flash(ahora):
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
@@ -176,8 +248,10 @@ def flash(gate=False):
             return
     print(f"[{ahora:%H:%M}] flash: datos...")
     D = datos.recolectar()
+    _guardar_cierre_ipsa(D, ahora)
     print("   noticias...")
     N = noticias.recolectar()
+    _avisar_salud(D, N, ahora, "flash")
     nuevas = noticias.nuevas(N, top=C.FLASH_TOP)
     res = agenda.resultados_hoy(TZ)
     L = [f"⚡ <b>{C.NOMBRE} · Flash {ahora:%H:%M}</b> · {ahora:%d-%m-%Y}", _linea_precios(D), ""]
@@ -241,6 +315,8 @@ def main():
         enviar(ruta, cont, meta)
     elif cmd == "flash":
         flash(gate="--gate" in args)
+    elif cmd == "health":
+        health()
     elif cmd == "selftest":
         print("1) datos"); import datos, noticias, agenda
         D = datos.recolectar(); assert D["yahoo"].get("usdclp"), "sin dólar"

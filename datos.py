@@ -192,6 +192,21 @@ def ipsa():
             mismo_dia = abs(ts - mejor["market_time"]) < 20 * 3600
             if (mismo_dia and precision > mejor["precision"]) or (not mismo_dia and ts > mejor["market_time"]):
                 mejor = cand
+    # cierre exacto guardado por el flash de la tarde (state.json): gana si es
+    # del ultimo dia habil y el titular de ahora es aproximado o mas viejo
+    try:
+        st = json.load(open(os.path.join(HERE, "state.json")))
+        g = st.get("ipsa_cierre")
+        if g:
+            fg = dt.date.fromisoformat(g["fecha"])
+            hoy = dt.datetime.now(dt.timezone.utc).date()
+            if (hoy - fg).days <= 4 and (mejor is None or mejor.get("aprox") or
+                                         dt.datetime.fromtimestamp(mejor["market_time"], dt.timezone.utc).date() < fg):
+                mejor = {"symbol": "IPSA", "price": g["price"], "chg": g.get("chg"), "texto": g.get("texto", ""),
+                         "aprox": False, "precision": 9, "fuente": g.get("fuente", "prensa"),
+                         "link": g.get("link", ""), "market_time": dt.datetime(fg.year, fg.month, fg.day, 21, tzinfo=dt.timezone.utc).timestamp()}
+    except Exception:
+        pass
     return mejor
 
 

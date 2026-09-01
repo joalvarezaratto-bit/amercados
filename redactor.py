@@ -162,7 +162,7 @@ _SYSTEM = """Eres el editor de AMercados, un informe matinal de mercados en espa
 
 REGLAS ESTRICTAS:
 1. Usa SOLO los DATOS y TITULARES entregados. NO inventes cifras, nombres, fechas ni hechos. Si un tema no tiene titulares, dilo brevemente o deja la sección corta.
-2. Los titulares son solo títulos (no tienes el cuerpo de las notas): no agregues detalles que el titular no contiene.
+2. Algunas notas traen "Texto de la nota" (sus primeros párrafos): úsalo para dar cifras y contexto. Las que solo tienen título: no agregues detalles que el título no contiene.
 3. Es un informe de lo que PASÓ y del estado ACTUAL (foto del momento), NO un pronóstico. No predigas si el dólar, la bolsa o el cobre van a subir o bajar. Puedes señalar qué eventos o niveles vigilar.
 4. Nada de consejos de inversión.
 5. Cuando cites una cifra, usa exactamente la entregada (formato chileno: $934,30; 11.315 puntos; US$92,21).
@@ -208,6 +208,8 @@ def _prompt_usuario(D, N, A, meta, hechos, tz):
             L.append("- (sin titulares hoy)")
         for it in items[:C.NOTICIAS_TOP_POR_SECCION]:
             L.append(f"- {it['titulo']} ({it['fuente']})")
+            if it.get("resumen"):
+                L.append(f"    Texto de la nota: {it['resumen']}")
     return "\n".join(L)
 
 

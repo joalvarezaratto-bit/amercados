@@ -150,10 +150,16 @@ NOTICIAS = {
     ],
     "bolsa": [
         ("cl", "IPSA Bolsa de Santiago acciones when:1d"),
+        ("cl", "Chile resultados trimestre utilidades empresa OR holding when:1d"),
         ("intl", "Wall Street cierre acciones resultados when:1d"),
     ],
 }
 NOTICIAS_TOP_POR_SECCION = 8     # titulares maximos que se le pasan a la IA por seccion
+# Lectura del CUERPO de las notas mas relevantes (para que la IA tenga contenido,
+# no solo titulos). Se leen hasta LEER_NOTAS notas, con tope de tiempo. Algunos
+# medios bloquean: esas quedan solo con el titular.
+LEER_NOTAS = 18
+LEER_TIEMPO_MAX = 120            # segundos
 NOTICIAS_MOSTRAR_SIN_IA = 6      # titulares por seccion cuando NO hay IA
 
 # Palabras que suben la relevancia de un titular (para elegir "lo mas relevante").

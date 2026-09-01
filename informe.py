@@ -129,7 +129,19 @@ def _ticker(D, tz):
     ip = D.get("ipsa")
     items = []
     if u:
-        items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
+        ahora = dt.datetime.now(tz)
+        abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
+        if abierto:
+            items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
+        else:
+            # mercado chileno cerrado: se muestra el ULTIMO CIERRE (como el original)
+            cierres = DS.cierres_diarios(u["candles"], 2, tz)
+            if len(cierres) == 2:
+                c1, c0 = cierres[-1], cierres[-2]
+                dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][c1["fecha"].weekday()]
+                items.append((f"Dólar (cierre {dia})", "$" + fmt(c1["c"]), _flecha((c1["c"] - c0["c"]) / c0["c"] * 100, 2)))
+            else:
+                items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
     if ip:
         items.append(("IPSA (cierre, prensa)", ("≈" if ip.get("aprox") else "") + fmt(ip["price"], 0 if ip.get("aprox") else 2), _flecha(ip.get("chg"))))
     if e:
