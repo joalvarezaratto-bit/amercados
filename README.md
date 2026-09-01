@@ -16,12 +16,17 @@ agenda y riesgos) y lo manda a Telegram como archivo + resumen.
 - Con **IA** (Claude, `USE_AI = True` y API key con saldo): redacta titular, párrafos y riesgos a partir de los datos y titulares, con la regla de **no inventar**.
 - Sin IA (o si falla): edición **por reglas** (titulares agrupados + frases con los datos). El informe siempre sale.
 
+## Ritmo diario (hora de Chile, días hábiles)
+- **07:00** informe completo (HTML + resumen a Telegram).
+- **13:00 y 18:00** *flash*: precios del momento + titulares **nuevos** desde el último envío (sin IA). Horas en `config.FLASH_HORAS`.
+
 ## Comandos
 ```
 python3 amercados.py build            # genera salida/amercados-AAAA-MM-DD.html (no envía)
 python3 amercados.py build --abrir    # idem y lo abre en el navegador
 python3 amercados.py send             # genera y envía a Telegram
 python3 amercados.py send --gate      # solo si es la hora (lo usa la nube)
+python3 amercados.py flash            # flash intradía (precios + titulares nuevos)
 python3 amercados.py selftest         # prueba todo sin enviar
 python3 amercados.py datos | noticias | test | chatid
 ```

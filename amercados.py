@@ -11,6 +11,8 @@ Comandos:
   python3 amercados.py build --sin-ia  -> idem, forzando la redaccion por reglas
   python3 amercados.py send         -> genera y ENVIA a Telegram
   python3 amercados.py send --gate  -> solo envia si es la hora (dias habiles, 1 vez/dia)
+  python3 amercados.py flash        -> flash intradia: precios + titulares nuevos (sin IA)
+  python3 amercados.py flash --gate -> solo a las horas FLASH_HORAS, una vez cada una
   python3 amercados.py selftest     -> prueba todo sin enviar nada
 """
 import os
@@ -82,6 +84,7 @@ def construir(sin_ia=False, verbose=True):
     if verbose:
         print(f"   modo: {cont['modo']}" + (f" ({meta.get('ia_motivo')})" if cont["modo"] != "ia" else f" ({meta.get('ia_uso')})"))
     html_txt = informe.render(D, N, A, cont, meta, TZ)
+    meta["noticias"] = N
     os.makedirs(SALIDA, exist_ok=True)
     nombre = f"amercados-{ahora:%Y-%m-%d}.html"
     ruta = os.path.join(SALIDA, nombre)
@@ -121,8 +124,86 @@ def enviar(ruta, cont, meta):
         s["ultimo_envio"] = ahora.strftime("%Y-%m-%d")
         s["ultimo_modo"] = cont.get("modo")
         _save_state(s)
+        # todo lo que salió en el informe ya está "visto": el flash traerá solo lo nuevo
+        import noticias
+        N = meta.get("noticias") or {}
+        noticias.marcar_vistas([it for s_, its in N.items() for it in its])
         print("   enviado a Telegram ✅")
     return ok and ok2
+
+
+def _toca_flash(ahora):
+    if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
+        return False, "fin de semana o feriado"
+    if ahora.hour not in C.FLASH_HORAS:
+        return False, f"no es hora de flash ({', '.join(f'{h:02d}:00' for h in C.FLASH_HORAS)})"
+    hechos = _state().get("flashes", {}).get(ahora.strftime("%Y-%m-%d"), [])
+    if ahora.hour in hechos:
+        return False, "este flash ya se envió"
+    return True, ""
+
+
+def _linea_precios(D):
+    from redactor import fmt, pct, _q
+    P = []
+    u = _q(D, "usdclp")
+    if u:
+        P.append(f"💵 Dólar <b>${fmt(u['price'])}</b> ({pct(u['chg'], 2)})")
+    ip = D.get("ipsa")
+    if ip:
+        P.append(f"📈 IPSA <b>{'≈' if ip.get('aprox') else ''}{fmt(ip['price'], 0 if ip.get('aprox') else 2)}</b>"
+                 + (f" ({pct(ip['chg'])})" if ip.get("chg") is not None else "") + " (prensa)")
+    for k, emoji in (("cobre", "🧲"), ("brent", "🛢️"), ("oro", "🥇")):
+        q = _q(D, k)
+        if q:
+            P.append(f"{emoji} {q['nombre']} <b>US${fmt(q['price'], q['dec'])}</b> ({pct(q['chg'])})")
+    for k, emoji in (("spx", "🇺🇸"), ("vix", "😬")):
+        q = _q(D, k)
+        if q:
+            P.append(f"{emoji} {q['nombre']} <b>{fmt(q['price'], 1 if k == 'vix' else 0)}</b> ({pct(q['chg'])})")
+    return "\n".join(P)
+
+
+def flash(gate=False):
+    """Mensaje corto: precios del momento + titulares nuevos + datos publicados hoy."""
+    import datos, noticias, agenda, telegram as T
+    from redactor import _fecha_corta
+    ahora = dt.datetime.now(TZ)
+    if gate:
+        toca, motivo = _toca_flash(ahora)
+        if not toca:
+            print(f"[{ahora:%Y-%m-%d %H:%M} Chile] flash no se envía: {motivo}.")
+            return
+    print(f"[{ahora:%H:%M}] flash: datos...")
+    D = datos.recolectar()
+    print("   noticias...")
+    N = noticias.recolectar()
+    nuevas = noticias.nuevas(N, top=C.FLASH_TOP)
+    res = agenda.resultados_hoy(TZ)
+    L = [f"⚡ <b>{C.NOMBRE} · Flash {ahora:%H:%M}</b> · {ahora:%d-%m-%Y}", _linea_precios(D), ""]
+    if nuevas:
+        L.append("<b>Titulares nuevos</b>")
+        for it in nuevas:
+            L.append(f"• <a href=\"{it['link']}\">{it['titulo']}</a> · <i>{it['fuente']}</i>")
+    else:
+        L.append("<i>Sin titulares nuevos desde el último envío.</i>")
+    if res:
+        L.append("")
+        L.append("<b>Datos publicados hoy</b>")
+        for r in res[:5]:
+            L.append(f"• {r['hora']} {r['titulo']}: <b>{r['actual']}</b>"
+                     + (f" (esperado {r['forecast']})" if r['forecast'] else ""))
+    L.append("")
+    L.append(f"<i>Foto del momento, no pronóstico. Datos hasta las {ahora:%H:%M}.</i>")
+    ok = T.send("\n".join(L)[:4000])
+    if ok:
+        noticias.marcar_vistas(nuevas)
+        s = _state()
+        s.setdefault("flashes", {})
+        s["flashes"] = {ahora.strftime("%Y-%m-%d"): sorted(set(s["flashes"].get(ahora.strftime("%Y-%m-%d"), []) + [ahora.hour]))}
+        _save_state(s)
+        print(f"   flash enviado ✅ ({len(nuevas)} titulares nuevos)")
+    return ok
 
 
 def main():
@@ -158,6 +239,8 @@ def main():
                 return
         ruta, cont, meta = construir(sin_ia="--sin-ia" in args)
         enviar(ruta, cont, meta)
+    elif cmd == "flash":
+        flash(gate="--gate" in args)
     elif cmd == "selftest":
         print("1) datos"); import datos, noticias, agenda
         D = datos.recolectar(); assert D["yahoo"].get("usdclp"), "sin dólar"

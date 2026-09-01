@@ -9,7 +9,9 @@ titulos distintos; se muestra una vez). Logica heredada de dolar-bot.
 
 HONESTO: son titulares publicos, no analisis propio ni prediccion.
 """
+import os
 import re
+import json
 import html
 import unicodedata
 import datetime as dt
@@ -18,6 +20,8 @@ import feedparser
 import config as C
 
 UA = {"User-Agent": "Mozilla/5.0"}
+HERE = os.path.dirname(os.path.abspath(__file__))
+VISTAS_FILE = os.path.join(HERE, "noticias_vistas.json")   # historias ya enviadas (se versiona)
 
 
 def _url(q, region):
@@ -181,3 +185,39 @@ def recolectar(top=None):
         rel.append(it)
     out["relevante"] = rel[:6]
     return out
+
+
+# ---------------------------------------------------------------- vistas
+def cargar_vistas():
+    """Firmas de las historias ya enviadas (informe o flash)."""
+    try:
+        return [frozenset(x) for x in json.load(open(VISTAS_FILE))]
+    except Exception:
+        return []
+
+
+def marcar_vistas(items):
+    """Recuerda las historias mostradas para que el próximo flash traiga solo
+    lo NUEVO. Guarda las últimas ~400."""
+    vistas = cargar_vistas()
+    for it in items:
+        f = it.get("firma") or firma(it["titulo"])
+        if not _misma(f, vistas):
+            vistas.append(f)
+    try:
+        json.dump([sorted(f) for f in vistas[-400:]], open(VISTAS_FILE, "w"))
+    except Exception:
+        pass
+
+
+def nuevas(N, top=4):
+    """Titulares NO enviados antes, los más relevantes primero (una historia
+    por tema)."""
+    vistas = cargar_vistas()
+    out = []
+    for it in N.get("relevante", []) + [x for s, its in N.items() if s != "relevante" for x in its]:
+        if _misma(it["firma"], vistas) or _misma(it["firma"], [o["firma"] for o in out]):
+            continue
+        out.append(it)
+    out.sort(key=lambda x: -x["score"])
+    return out[:top]

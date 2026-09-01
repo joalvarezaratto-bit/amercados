@@ -48,6 +48,12 @@ TIMEZONE = "America/Santiago"
 REPORT_HORA = 7          # 7 = entre 07:00 y 08:59 hora Chile (ventana de 2 h)
 SOLO_DIAS_HABILES = True
 
+# "Flash" intradía: mensaje corto a Telegram (precios del momento + titulares
+# NUEVOS desde el último envío), sin volver a redactar el informe. Se manda a
+# estas horas de Chile (durante esa hora, una vez). Lista vacía = sin flashes.
+FLASH_HORAS = [13, 18]
+FLASH_TOP = 4            # máximo de titulares nuevos por flash
+
 FERIADOS_CL = {
     "01-01", "05-01", "05-21", "06-20", "06-29", "07-16", "08-15",
     "09-18", "09-19", "10-31", "11-01", "12-08", "12-25",
