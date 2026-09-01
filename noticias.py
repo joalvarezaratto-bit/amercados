@@ -58,6 +58,50 @@ def _misma(f, previas):
     return False
 
 
+# Medios chilenos (si la fuente es uno de estos, la nota es de Chile aunque el
+# titulo no diga "Chile"). Se compara en minusculas y sin tildes.
+MEDIOS_CL = ("diario financiero", "df.cl", "la tercera", "emol", "el mercurio", "biobio", "bio bio",
+             "cooperativa", "cnn chile", "t13", "24horas", "24 horas", "la segunda", "el mostrador",
+             "ex-ante", "pauta", "diarioestrategia", "estrategia", "publimetro", "adn radio",
+             "radio duna", "infinita", "ciper", "el dinamo", "el dínamo", "america economia",
+             "américa economía", "la nacion chile", "chilevision", "chv", "mega", "meganoticias",
+             "portal innova", "xtb", "minería chilena", "mineria chilena", "redimin", "mch",
+             "g5noticias", "fintualist", "el desconcierto", "the clinic", "radio agricultura",
+             "diario concepcion", "el sur", "soychile", "reporte minero", "bnamericas", "df sud",
+             "la hora", "lun", "las ultimas noticias", "elmostrador", "latercera", "mascontainer",
+             "portal portuario", "portalportuario", "econsult", "banco central")
+# Señales de que la nota es de OTRO pais (se descarta en la seccion Chile
+# salvo que el titulo mencione Chile).
+OTRO_PAIS = ("colombia", "minhacienda", "el emisor", "banrep", "petro", "de la espriella", "bogotá",
+             "bogota", "méxico", "mexico", "banxico", "sheinbaum", "argentin", "milei", "perú", "peru",
+             "bcrp", "ecuador", "uruguay", "paraguay", "bolivia", "venezuela", "maduro", "españa",
+             "brasil", "lula", "portafolio", "semana", "infobae", "ámbito", "ambito", "clarín",
+             "clarin", "el país", "el pais", "expansión", "expansion", "el economista", "gestión",
+             "gestion", "la república", "la republica", "el universal", "el financiero", "forbes méxico",
+             "forbes mexico", "eju.tv", "el tiempo")
+CHILE_KW = ("chile", "chilen", "santiago", "banco central de chile", "hacienda", "kast", "codelco",
+            "ipsa", "imacec", "ine ", "tpm", "cochilco", "sonami", "sofofa", "cámara de diputados",
+            "senado", "la moneda", "peso chileno", "uf ", "afp", "isapre", "enap", "sqm", "latam",
+            "falabella", "cencosud", "copec", "entel", "bci", "banco de chile", "santander chile",
+            "colbún", "colbun", "enel chile", "ccu", "andina", "cmpc", "mall plaza", "parque arauco",
+            "vapores", "antofagasta", "escondida", "collahuasi", "los pelambres", "quebrada blanca")
+
+
+def _es_chile(titulo, fuente):
+    """True si la nota es de Chile: fuente chilena, o el titulo menciona Chile.
+    Descarta notas de otros paises (Colombia/Mexico/Argentina...) que se
+    cuelan por hablar de 'Hacienda', 'Presupuesto', 'Banco Central'."""
+    t = _sin_tildes((titulo + " ").lower())
+    f = _sin_tildes((fuente or "").lower())
+    if any(k in t for k in CHILE_KW):
+        return True
+    if any(m in f for m in MEDIOS_CL):
+        return not any(o in t for o in OTRO_PAIS[:40])   # medio chileno hablando de otro pais
+    if any(o in t for o in OTRO_PAIS) or any(o in f for o in OTRO_PAIS):
+        return False
+    return False   # sin señal de Chile -> fuera (mejor callar que confundir)
+
+
 def _score(titulo):
     t = titulo.lower()
     s = sum(p for kw, p in C.KW.items() if kw in t)
@@ -84,7 +128,7 @@ def _fecha(entry):
         return None
 
 
-def buscar_seccion(consultas, top):
+def buscar_seccion(consultas, top, solo_chile=False):
     cands = []
     for region, q in consultas:
         try:
@@ -97,6 +141,8 @@ def buscar_seccion(consultas, top):
             titulo = full.rsplit(" - ", 1)[0] if " - " in full else full
             titulo = titulo.strip()
             if len(titulo) < 20:
+                continue
+            if solo_chile and not _es_chile(titulo, fuente):
                 continue
             f = firma(titulo)
             if len(f) < 3:
@@ -119,7 +165,7 @@ def recolectar(top=None):
     out = {}
     todas = []
     for sec, consultas in C.NOTICIAS.items():
-        items = buscar_seccion(consultas, top)
+        items = buscar_seccion(consultas, top, solo_chile=(sec in ("chile", "cambio", "bolsa") and False) or sec == "chile")
         out[sec] = items
         for it in items:
             it2 = dict(it)

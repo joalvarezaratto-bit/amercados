@@ -117,11 +117,12 @@ NOTICIAS = {
         ("intl", "China economía datos when:1d"),
     ],
     "chile": [
-        ("cl", "economía Chile Hacienda Banco Central when:1d"),
-        ("cl", "Gobierno Congreso proyecto de ley economía when:1d"),
-        ("cl", "Chile producción cobre Codelco minería when:1d"),
-        ("cl", "empresas chilenas resultados gerente general when:1d"),
-        ("cl", "Chile empleo IPC Imacec INE when:1d"),
+        ("cl", "Chile economía Hacienda OR \"Banco Central\" when:1d"),
+        ("cl", "Chile Gobierno Congreso \"proyecto de ley\" OR presupuesto when:1d"),
+        ("cl", "Chile cobre Codelco minería producción when:1d"),
+        ("cl", "Chile empresas resultados OR utilidades OR \"gerente general\" when:1d"),
+        ("cl", "Chile empleo OR IPC OR Imacec OR INE when:1d"),
+        ("cl", "Kast Gobierno reforma OR anuncio when:1d"),
     ],
     "geopolitica": [
         ("intl", "Irán Ormuz Israel ataque when:1d"),

@@ -157,11 +157,11 @@ def _sec_cambio(D, tz, cont):
     ch = D.get("chile") or {}
     if not u:
         return "<p>Sin datos del dólar hoy (Yahoo no respondió).</p>"
-    cierres = DS.cierres_diarios(u["candles"], 5)
+    cierres = DS.cierres_diarios(u["candles"], 5, tz)
     ult = cierres[-1] if cierres else None
     sem = (cierres[-1]["c"] - cierres[0]["c"]) if len(cierres) >= 2 else None
-    f_ult = _fecha_corta(dt.datetime.fromtimestamp(ult["t"], tz)) if ult else ""
-    f_ini = _fecha_corta(dt.datetime.fromtimestamp(cierres[0]["t"], tz)) if cierres else ""
+    f_ult = _fecha_corta(ult["fecha"]) if ult else ""
+    f_ini = _fecha_corta(cierres[0]["fecha"]) if cierres else ""
     obs = ch.get("dolar")
     stripe = f'''<div class="stripe">
     <div class="card"><div class="k">Dólar spot — ahora</div><div class="v">${fmt(u["price"])}</div><div class="d {_cls(u["chg_abs"])}">{"▲" if u["chg_abs"] > 0 else ("▼" if u["chg_abs"] < 0 else "—")} {fmt(u["chg_abs"]).replace("-", "")} ({pct(u["chg"], 2)})</div></div>
@@ -171,14 +171,24 @@ def _sec_cambio(D, tz, cont):
   </div>'''
     filas = []
     prev = None
+    # El "dólar observado" que publica el BCCh el dia D es el PROMEDIO del dia
+    # habil anterior; por eso a la fila del dia D le corresponde el observado
+    # publicado el siguiente dia habil.
     obs_map = dict(ch.get("dolar_serie") or [])
+    def _obs_de(fecha):
+        f = fecha + dt.timedelta(days=1)
+        for _ in range(4):
+            if f.strftime("%Y-%m-%d") in obs_map:
+                return obs_map[f.strftime("%Y-%m-%d")]
+            f += dt.timedelta(days=1)
+        return None
     for c in cierres:
-        f = dt.datetime.fromtimestamp(c["t"], tz)
+        f = c["fecha"]
         var = ((c["c"] - prev) / prev * 100) if prev else None
-        o = obs_map.get(f.strftime("%Y-%m-%d"))
+        o = _obs_de(f)
         filas.append(f"<tr><td>{_fecha_corta(f)}</td><td>${fmt(c['c'])}</td><td>{_flecha(var, 2) if var is not None else '<span class=flat>—</span>'}</td><td>{('$' + fmt(o)) if o else '—'}</td></tr>")
         prev = c["c"]
-    tabla = ('<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Dólar (cierre spot)</th><th>Var. diaria</th><th>Observado BCCh</th></tr></thead><tbody>'
+    tabla = ('<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Dólar (cierre spot)</th><th>Var. diaria</th><th>Observado BCCh (prom. del día)</th></tr></thead><tbody>'
              + "".join(filas) + "</tbody></table></div>")
     serie = DS.serie_mensual(u["candles"])
     svg, prom, resumen = grafico.usdclp_12m(serie, u["price"], "hoy")

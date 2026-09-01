@@ -85,13 +85,13 @@ def frases_datos(D, tz, meta):
     u = _q(D, "usdclp")
     ch = D.get("chile") or {}
     if u:
-        cierres = DS.cierres_diarios(u["candles"], 6)
+        cierres = DS.cierres_diarios(u["candles"], 5, tz)
         F.append(f"Dólar spot (interbancario, Yahoo) ahora ${fmt(u['price'])}, "
                  f"{_dir(u['chg'])} {pct(u['chg'], 2)} vs. el cierre anterior de ${fmt(u['prev'])}.")
-        if len(cierres) >= 5:
+        if len(cierres) >= 2:
             F.append(f"Variación semanal del dólar: {fmt(cierres[-1]['c'] - cierres[0]['c'])} pesos "
-                     f"(de ${fmt(cierres[0]['c'])} el {_fecha_corta(dt.datetime.fromtimestamp(cierres[0]['t'], tz))} "
-                     f"a ${fmt(cierres[-1]['c'])} el {_fecha_corta(dt.datetime.fromtimestamp(cierres[-1]['t'], tz))}).")
+                     f"(de ${fmt(cierres[0]['c'])} el {_fecha_corta(cierres[0]['fecha'])} "
+                     f"a ${fmt(cierres[-1]['c'])} el {_fecha_corta(cierres[-1]['fecha'])}).")
     if ch.get("dolar"):
         F.append(f"Dólar observado del Banco Central para hoy: ${fmt(ch['dolar']['valor'])} "
                  f"(promedio del día hábil anterior).")
@@ -317,9 +317,9 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     internacional = [{"h3": "Titulares del día", "parrafos": []}]
     internacional[0]["items"] = lista("internacional")
     tasas_txt = [h for h in hechos if any(x in h for x in ("Tesoro", "TPM", "DXY"))]
-    cambio_txt = " ".join(h for h in hechos if h.startswith(("Dólar", "Variación semanal", "Euro", "Real")))
+    cambio_txt = " ".join(h for h in hechos if h.startswith(("Dólar", "Variación semanal", "Euro:", "Real")))
     comm_txt = " ".join(h for h in hechos if h.startswith(("Petróleo", "Cobre", "Oro", "Plata")))
-    bolsa_txt = " ".join(h for h in hechos if h.startswith(("IPSA", "ETF", "S&P", "Futuro", "Euro Stoxx", "Nikkei", "Hang", "Shanghái", "VIX")))
+    bolsa_txt = " ".join(h for h in hechos if h.startswith(("IPSA", "ETF", "S&P", "Futuro", "Euro Stoxx", "Nikkei", "Hang", "Shanghái", "VIX", "Bitcoin")))
     riesgos = []
     for e in A:
         if e["impacto"] == "Alto":

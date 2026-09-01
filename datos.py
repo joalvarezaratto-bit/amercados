@@ -205,11 +205,29 @@ def serie_mensual(candles, meses=12):
     return [((y, m), por_mes[(y, m)]) for (y, m) in claves]
 
 
-def cierres_diarios(candles, n=5):
-    """Ultimos n cierres diarios COMPLETOS (excluye la vela de hoy si aun se forma)."""
-    hoy_utc = dt.datetime.now(dt.timezone.utc).date()
-    comp = [c for c in candles
-            if dt.datetime.fromtimestamp(c["t"], dt.timezone.utc).date() < hoy_utc]
+def fecha_sesion(t, tz):
+    """Fecha del DIA DE MERCADO de una vela. Yahoo fecha las velas FX a las
+    23:00 UTC; la del domingo corresponde al cierre del VIERNES. Devuelve date."""
+    f = dt.datetime.fromtimestamp(t, tz).date()
+    if f.weekday() == 6:      # domingo -> viernes
+        f -= dt.timedelta(days=2)
+    elif f.weekday() == 5:    # sabado -> viernes
+        f -= dt.timedelta(days=1)
+    return f
+
+
+def cierres_diarios(candles, n=5, tz=None):
+    """Ultimos n cierres diarios COMPLETOS (excluye la vela de hoy si aun se
+    forma). Cada vela sale con 'fecha' = dia de mercado."""
+    tz = tz or dt.timezone.utc
+    hoy = dt.datetime.now(tz).date()
+    comp = []
+    for c in candles:
+        f = fecha_sesion(c["t"], tz)
+        if f < hoy:
+            c2 = dict(c)
+            c2["fecha"] = f
+            comp.append(c2)
     return comp[-n:]
 
 
