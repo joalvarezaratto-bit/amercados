@@ -200,4 +200,4 @@ IPC_INE_DIA = 8
 #  Publicacion. Si activas GitHub Pages en el repo, pon aqui la URL para
 #  que el mensaje de Telegram incluya el link (ademas del archivo HTML).
 # ---------------------------------------------------------------------
-PAGES_URL = ""   # ej. "https://joalvarezaratto-bit.github.io/amercados/"
+PAGES_URL = "https://joalvarezaratto-bit.github.io/amercados/"
