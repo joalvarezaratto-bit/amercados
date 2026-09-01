@@ -1,0 +1,8 @@
+secrets_local.py
+__pycache__/
+*.pyc
+# caches (NO versionar: causan conflictos entre Mac y nube)
+cache_*.json
+ai_breaker.json
+salida/*.html
+!salida/.gitkeep

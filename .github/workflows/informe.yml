@@ -1,0 +1,48 @@
+name: AMercados - informe matinal
+
+# Corre cada hora (a los :05 UTC). El bot decide con `--gate` si en Chile ya
+# son las 07:xx de un dia habil y si todavia no se envio hoy. Asi el horario
+# de verano nunca lo descuadra (misma tecnica que news-bot y dolar-bot).
+# GitHub Actions puede atrasarse unos minutos: el informe llega ~07:05-07:20.
+
+on:
+  schedule:
+    - cron: "5 * * * *"
+  workflow_dispatch:      # boton "Run workflow" para mandarlo a mano (sin gate)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: amercados-estado
+  cancel-in-progress: false
+
+jobs:
+  informe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Generar y enviar el informe
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python amercados.py send --gate
+          else
+            python amercados.py send
+          fi
+      - name: Guardar estado y publicar HTML (GitHub Pages en docs/)
+        run: |
+          git config user.name "amercados-bot"
+          git config user.email "amercados-bot@users.noreply.github.com"
+          # cada archivo POR SEPARADO (si uno no existe, no bloquea a los demas)
+          git add state.json 2>/dev/null || true
+          git add docs 2>/dev/null || true
+          git commit -m "informe $(date -u +%Y-%m-%d)" || { echo "sin cambios"; exit 0; }
+          git push || (git pull --rebase --autostash && git push) || echo "no se pudo subir, la proxima corrida reintenta"
