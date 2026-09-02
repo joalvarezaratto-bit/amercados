@@ -2,7 +2,7 @@
  "ultimo_envio": "2026-09-02",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-09-01": [
+  "2026-09-02": [
    18
   ]
  },
@@ -11,5 +11,13 @@
   "2026-09-02": [
    14
   ]
+ },
+ "ipsa_cierre": {
+  "fecha": "2026-09-02",
+  "price": 11500.0,
+  "chg": null,
+  "fuente": "Diario Financiero",
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9XOE5NWU40Q0ZRY2Vid0ljRFg0YVJkX3dtc00tc1F6TjdQMl8xeUxQZmIxb3NsaEY4aW5fXzZ4LTJmOE5UeUFJek5WeFpBTnZQc3diUjlYaVpaeFdHaEVac1VCUC1NbVBm?oc=5",
+  "texto": "IPSA sigue desafiando a la incertidumbre y sube a niveles de 11.500 puntos al inicio de la tarde junto con bolsas de la regi\u00f3n"
  }
 }
