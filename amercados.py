@@ -14,6 +14,8 @@ Comandos:
   python3 amercados.py flash        -> flash intradia: precios + titulares nuevos (sin IA)
   python3 amercados.py flash --gate -> solo a las horas FLASH_HORAS, una vez cada una
   python3 amercados.py health       -> avisa si hoy no salio el informe (lo usa la nube)
+  python3 amercados.py actualizar   -> edicion viva: regenera la pagina con datos frescos y el texto de hoy
+  python3 amercados.py actualizar --gate -> solo a las horas ACTUALIZAR_HORAS (dias habiles)
   python3 amercados.py selftest     -> prueba todo sin enviar nada
 """
 import os
@@ -29,6 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SALIDA = os.path.join(HERE, "salida")
 DOCS = os.path.join(HERE, "docs")
 STATE = os.path.join(HERE, "state.json")
+EDICION = os.path.join(HERE, "edicion_hoy.json")   # texto editorial del dia (para la edicion viva)
 TZ = zoneinfo.ZoneInfo(C.TIMEZONE)
 
 
@@ -108,6 +111,12 @@ def construir(sin_ia=False, verbose=True):
         print(f"   modo: {cont['modo']}" + (f" ({meta.get('ia_motivo')})" if cont["modo"] != "ia" else f" ({meta.get('ia_uso')})"))
     html_txt = informe.render(D, N, A, cont, meta, TZ)
     meta["noticias"] = N
+    # guardar el texto editorial del dia para la "edicion viva" (actualizar)
+    try:
+        json.dump({"fecha": ahora.strftime("%Y-%m-%d"), "hora": ahora.strftime("%H:%M"), "cont": cont},
+                  open(EDICION, "w"), ensure_ascii=False)
+    except Exception as e:
+        print("   (aviso) no se pudo guardar edicion_hoy.json:", str(e)[:60])
     os.makedirs(SALIDA, exist_ok=True)
     nombre = f"amercados-{ahora:%Y-%m-%d}.html"
     ruta = os.path.join(SALIDA, nombre)
@@ -212,6 +221,56 @@ def _guardar_cierre_ipsa(D, ahora):
     _save_state(s)
 
 
+def _escribir_salidas(html_txt, ahora):
+    os.makedirs(SALIDA, exist_ok=True)
+    ruta = os.path.join(SALIDA, f"amercados-{ahora:%Y-%m-%d}.html")
+    open(ruta, "w", encoding="utf-8").write(html_txt)
+    shutil.copy(ruta, os.path.join(SALIDA, "ultimo.html"))
+    os.makedirs(DOCS, exist_ok=True)
+    shutil.copy(ruta, os.path.join(DOCS, "index.html"))
+    shutil.copy(ruta, os.path.join(DOCS, f"{ahora:%Y-%m-%d}.html"))
+    return ruta
+
+
+def actualizar(gate=False):
+    """Edicion viva: vuelve a generar la pagina con DATOS frescos y el TEXTO
+    editorial guardado del informe de la mañana (sin IA, sin Telegram)."""
+    import datos, agenda, informe, dolar
+    ahora = dt.datetime.now(TZ)
+    if gate:
+        if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
+            print(f"[{ahora:%Y-%m-%d %H:%M} Chile] actualizar: fin de semana o feriado."); return
+        if ahora.hour not in C.ACTUALIZAR_HORAS:
+            print(f"[{ahora:%Y-%m-%d %H:%M} Chile] actualizar: no es hora ({', '.join(f'{h:02d}:00' for h in C.ACTUALIZAR_HORAS)})."); return
+        hechas = _state().get("actualizaciones", {}).get(ahora.strftime("%Y-%m-%d"), [])
+        if ahora.hour in hechas:
+            print("actualizar: esta hora ya se hizo."); return
+    try:
+        ed = json.load(open(EDICION))
+    except Exception:
+        ed = None
+    if not ed or ed.get("fecha") != ahora.strftime("%Y-%m-%d"):
+        print("actualizar: no hay texto editorial de hoy (aún no salió el informe de la mañana); no se actualiza.")
+        return
+    print(f"[{ahora:%H:%M}] edición viva: datos...")
+    D = datos.recolectar()
+    A = agenda.proximos(TZ)
+    meta = {"ahora": ahora, "texto_de": ed.get("hora", ""), "resultados": agenda.resultados_hoy(TZ)}
+    try:
+        meta["dolar"] = dolar.analizar(D)
+    except Exception as e:
+        print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
+    cont = ed["cont"]
+    html_txt = informe.render(D, {}, A, cont, meta, TZ)
+    ruta = _escribir_salidas(html_txt, ahora)
+    s = _state()
+    s.setdefault("actualizaciones", {})
+    s["actualizaciones"] = {ahora.strftime("%Y-%m-%d"): sorted(set(s["actualizaciones"].get(ahora.strftime("%Y-%m-%d"), []) + [ahora.hour]))}
+    _save_state(s)
+    print(f"   página actualizada: {ruta} (texto de las {ed.get('hora')})")
+    return ruta
+
+
 def _toca_flash(ahora):
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
@@ -275,6 +334,9 @@ def flash(gate=False):
         for r in res[:5]:
             L.append(f"• {r['hora']} {r['titulo']}: <b>{r['actual']}</b>"
                      + (f" (esperado {r['forecast']})" if r['forecast'] else ""))
+    if C.PAGES_URL:
+        L.append("")
+        L.append(f"🔗 Informe completo actualizado: {C.PAGES_URL}")
     L.append("")
     L.append(f"<i>Foto del momento, no pronóstico. Datos hasta las {ahora:%H:%M}.</i>")
     ok = T.send("\n".join(L)[:4000])
@@ -325,6 +387,8 @@ def main():
         flash(gate="--gate" in args)
     elif cmd == "health":
         health()
+    elif cmd == "actualizar":
+        actualizar(gate="--gate" in args)
     elif cmd == "selftest":
         print("1) datos"); import datos, noticias, agenda
         D = datos.recolectar(); assert D["yahoo"].get("usdclp"), "sin dólar"

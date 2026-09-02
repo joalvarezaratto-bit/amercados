@@ -1,8 +1,9 @@
 name: AMercados - informe matinal + flashes
 
 # Corre cada hora (a los :05 UTC). El bot decide con `--gate` si en Chile ya
-# son las 07:xx de un dia habil (informe completo) o las 13:xx / 18:xx (flash
-# corto con precios + titulares nuevos). Asi el horario de verano nunca lo
+# son las 07:xx de un dia habil (informe completo), las 13:xx / 18:xx (flash
+# corto con precios + titulares nuevos) o las 10/13/16/19 (edicion viva: se
+# regenera la pagina con datos frescos y el texto de la mañana). Asi el horario de verano nunca lo
 # descuadra (misma tecnica que news-bot y dolar-bot). GitHub Actions puede
 # atrasarse unos minutos: los envios llegan ~:05-:20.
 
@@ -36,6 +37,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             python amercados.py send --gate
             python amercados.py flash --gate
+            python amercados.py actualizar --gate
             python amercados.py health
           else
             python amercados.py send
@@ -47,6 +49,7 @@ jobs:
           # cada archivo POR SEPARADO (si uno no existe, no bloquea a los demas)
           git add state.json 2>/dev/null || true
           git add noticias_vistas.json 2>/dev/null || true
+          git add edicion_hoy.json 2>/dev/null || true
           git add docs 2>/dev/null || true
           git commit -m "informe $(date -u +%Y-%m-%d)" || { echo "sin cambios"; exit 0; }
           git push || (git pull --rebase --autostash && git push) || echo "no se pudo subir, la proxima corrida reintenta"

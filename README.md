@@ -18,6 +18,7 @@ agenda y riesgos) y lo manda a Telegram como archivo + resumen.
 
 ## Ritmo diario (hora de Chile, días hábiles)
 - **07:00** informe completo (HTML + resumen a Telegram).
+- **10:00, 13:00, 16:00 y 19:00** *edición viva*: la página web se regenera con datos frescos y el texto de la mañana (sin IA, sin Telegram).
 - **13:00 y 18:00** *flash*: precios del momento + titulares **nuevos** desde el último envío (sin IA). Horas en `config.FLASH_HORAS`.
 
 ## Comandos

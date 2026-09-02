@@ -54,6 +54,12 @@ SOLO_DIAS_HABILES = True
 FLASH_HORAS = [13, 18]
 FLASH_TOP = 4            # máximo de titulares nuevos por flash
 
+# "Edición viva": a estas horas de Chile se REGENERA la pagina web (GitHub
+# Pages) con datos frescos (ticker, dolar, seccion del dolar, commodities,
+# bolsas, datos publicados), conservando el TEXTO editorial de la mañana.
+# No cuesta IA ni manda nada a Telegram; el link siempre queda al dia.
+ACTUALIZAR_HORAS = [10, 13, 16, 19]
+
 FERIADOS_CL = {
     "01-01", "05-01", "05-21", "06-20", "06-29", "07-16", "08-15",
     "09-18", "09-19", "10-31", "11-01", "12-08", "12-25",

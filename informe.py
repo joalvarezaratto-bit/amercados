@@ -441,7 +441,7 @@ def render(D, N, A, cont, meta, tz):
   <div class="eyebrow">{C.EYEBROW}</div>
   <div class="headline-frame"><div class="headline-label">El Titular AM</div><h1>{cont['titular']}</h1></div>
   <div class="sub">Lectura de 5 min · Mercados globales y locales</div>
-  <div class="range"><span>{C.CIUDAD}, {fecha_larga}</span><span>Datos hasta las {ahora:%H:%M} hrs</span></div>
+  <div class="range"><span>{C.CIUDAD}, {fecha_larga}</span><span>{("Texto de las " + meta["texto_de"] + " · datos actualizados a las ") if meta.get("texto_de") else "Datos hasta las "}{ahora:%H:%M} hrs</span></div>
   {ANDES}
 </header>
 <div class="sticky-bar"><span class="wm"><span class="a">A</span><span class="rest">Mercados</span></span><span class="sdate">{fecha_corta}</span></div>
