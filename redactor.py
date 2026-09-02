@@ -177,6 +177,7 @@ Responde ÚNICAMENTE con un JSON válido con esta forma exacta (sin texto antes 
  "geopolitica": ["<strong>Tema:</strong> explicación de por qué importa para los mercados", ...],   // 3-4 ítems
  "tasas": ["párrafo sobre inflación y tasas (Fed, Tesoro, TPM Chile) con las cifras entregadas", ...],   // 1-2 párrafos
  "cambio": "párrafo del dólar/peso: nivel, variación, qué lo movió (cobre, DXY, riesgo global) según los titulares",
+ "dolar": "lectura de 3-5 frases del ANÁLISIS CUANTITATIVO DEL DÓLAR: qué motor manda hoy, si el dólar está caro o barato vs. su valor justo, qué niveles vigilar y qué dice el contexto estratégico (carry, régimen, valoración). Describe el presente; no predigas.",
  "commodities": "párrafo sobre petróleo, cobre, oro y plata con las cifras y titulares entregados",
  "bolsa": "párrafo sobre IPSA (según prensa), Wall Street y bolsas globales con las cifras entregadas",
  "riesgos": ["<strong>Riesgo:</strong> por qué importa hoy", ...]   // 4-5 ítems, incluye eventos de la agenda
@@ -186,6 +187,15 @@ Responde ÚNICAMENTE con un JSON válido con esta forma exacta (sin texto antes 
 def _prompt_usuario(D, N, A, meta, hechos, tz):
     L = [f"FECHA: {_fecha_larga(meta['ahora'])}, {meta['ahora']:%H:%M} hora de Chile.", "", "DATOS DE MERCADO:"]
     L += [f"- {h}" for h in hechos]
+    try:
+        import dolar as DL
+        fd = DL.frases(meta.get("dolar"))
+    except Exception:
+        fd = []
+    if fd:
+        L.append("")
+        L.append("ANÁLISIS CUANTITATIVO DEL DÓLAR (modelo propio: motores, correlaciones, niveles):")
+        L += [f"- {h}" for h in fd]
     L.append("")
     L.append("AGENDA (próximos días):")
     for e in A[:12]:
@@ -337,8 +347,26 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
         q = _q(D, k)
         if q and abs(q.get("chg") or 0) >= 2:
             riesgos.append(f"<strong>Movimiento brusco en {q['nombre'].lower()}:</strong> {pct(q['chg'])} vs. el cierre anterior.")
+    # lectura del dolar por reglas
+    lectura_dolar = ""
+    a = meta.get("dolar")
+    if a:
+        ap = a.get("aportes") or {}
+        partes = [f"El dólar cotiza en ${fmt(a['price'])} con tendencia {a['trend'][0]} por medias móviles y {a['presion'].lower()} de sus motores."]
+        if ap:
+            kd = max(ap, key=lambda x: abs(ap[x]))
+            if abs(ap[kd]) >= 1:
+                partes.append(f"El motor que más pesa hoy es {a['nombres'][kd].lower()} ({a['motores'][kd]['chg']:+.2f}%), que empuja al dólar {'al alza' if ap[kd] > 0 else 'a la baja'}.".replace(".", ",", 1) if False else f"El motor que más pesa hoy es {a['nombres'][kd]} ({pct(a['motores'][kd]['chg'], 2)}), que empuja al dólar {'al alza' if ap[kd] > 0 else 'a la baja'}.")
+        v = a.get("valor")
+        if v:
+            est = "caro" if v["z"] >= 1 else ("barato" if v["z"] <= -1 else "en línea")
+            partes.append(f"Frente al cobre, el DXY y el real, el dólar está {est}: su valor justo es ${fmt(v['predicho'], 0)} ({v['gap']:+.0f} pesos).")
+        if a["resistencias"] or a["soportes"]:
+            partes.append("Niveles a vigilar: " + (f"resistencia ${fmt(a['resistencias'][0], 0)}" if a["resistencias"] else "") + (" y " if a["resistencias"] and a["soportes"] else "") + (f"soporte ${fmt(a['soportes'][0], 0)}" if a["soportes"] else "") + ".")
+        lectura_dolar = " ".join(partes)
     return {
         "titular": html.escape(titular),
+        "dolar": lectura_dolar,
         "relevante": relevante,
         "internacional": internacional,
         "chile": lista("chile"),
@@ -360,6 +388,8 @@ def _validar(cont):
         ok = ok and isinstance(cont.get(k), list) and all(isinstance(x, str) for x in cont[k])
     for k in ("cambio", "commodities", "bolsa"):
         ok = ok and isinstance(cont.get(k), str)
+    if not isinstance(cont.get("dolar"), str):
+        cont["dolar"] = ""
     return bool(ok)
 
 
@@ -384,7 +414,7 @@ def redactar(D, N, A, meta, tz):
         cont["internacional"] = [{"h3": _sanear(x.get("h3", "")), "parrafos": [_sanear(p) for p in x["parrafos"]]} for x in cont["internacional"]]
         for k in ("chile", "geopolitica", "tasas", "riesgos"):
             cont[k] = [_sanear(x) for x in cont[k]]
-        for k in ("cambio", "commodities", "bolsa"):
+        for k in ("cambio", "commodities", "bolsa", "dolar"):
             cont[k] = _sanear(cont[k])
         cont["modo"] = "ia"
         return cont

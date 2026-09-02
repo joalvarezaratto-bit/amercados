@@ -88,6 +88,27 @@ CSS = r"""
   .chart-title{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:2px;}
   .chart-meta{font-size:.65rem;color:var(--soft);margin-bottom:10px;}
   .callout{background:var(--coppersoft);border-left:3px solid var(--copper);padding:10px 12px;font-size:.78rem;color:#E3C9AE;margin:12px 0;border-radius:2px;}
+  .gauge{margin:6px 0 14px;}
+  .gauge .g-lab{display:flex;justify-content:space-between;font-size:.62rem;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .gauge .g-bar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,#5FA97E 0%,#2B2F35 50%,#C1655A 100%);}
+  .gauge .g-mark{position:absolute;top:-5px;width:4px;height:18px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px var(--bg);transform:translateX(-50%);}
+  .gauge .g-txt{font-family:"Iowan Old Style",Georgia,serif;font-size:1.05rem;color:#fff;margin-top:10px;}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 4px;}
+  .kpi .card{min-width:0;padding:10px 10px;}
+  .kpi .card .v{font-size:.9rem;}
+  @media (max-width:420px){.kpi{grid-template-columns:repeat(2,1fr);}}
+  .corr{display:inline-block;width:46px;height:5px;border-radius:3px;background:#2B2F35;position:relative;vertical-align:middle;margin-left:6px;}
+  .corr i{position:absolute;top:0;height:5px;border-radius:3px;}
+  .lvl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;}
+  .lvl .card{min-width:0;}
+  .lvl .row{display:flex;justify-content:space-between;font-size:.84rem;padding:4px 0;border-bottom:1px solid var(--line);}
+  .lvl .row:last-child{border-bottom:none;}
+  .lvl .row b{color:#fff;font-weight:600;}
+  .pctl{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,#5FA97E,#2B2F35 50%,#C1655A);margin-top:8px;}
+  .pctl i{position:absolute;top:-3px;width:3px;height:12px;background:#fff;border-radius:2px;transform:translateX(-50%);}
+  .strat{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0;}
+  .strat .card{min-width:0;}
+  .strat .card .v{font-size:.92rem;} .strat .card .d{font-size:.74rem;color:#B9BCC2;margin-top:5px;line-height:1.45;}
   footer{padding:18px 20px;font-size:.66rem;color:var(--soft);line-height:1.6;border-top:1px solid var(--line);}
   footer b{color:var(--copper);}
 """
@@ -98,9 +119,9 @@ ANDES = ('<svg class="andes" viewBox="0 0 400 58" preserveAspectRatio="none">'
 
 SECCIONES = [("sec1", "Lo más relevante"), ("sec2", "Panorama internacional"), ("sec3", "Chile"),
              ("sec4", "Riesgos geopolíticos"), ("sec5", "Inflación y tasas"), ("sec6", "Tipo de cambio"),
-             ("sec7", "Oro, cobre y plata"), ("sec8", "Mercado bursátil"), ("sec9", "Agenda económica"),
-             ("sec10", "Riesgos de la jornada")]
-ROMANOS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+             ("sec7", "Dólar en profundidad"), ("sec8", "Oro, cobre y plata"), ("sec9", "Mercado bursátil"),
+             ("sec10", "Agenda económica"), ("sec11", "Riesgos de la jornada")]
+ROMANOS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"]
 
 
 def _cls(chg):
@@ -252,6 +273,103 @@ def _sec_bolsa(D, tz):
             + "".join(filas) + "</tbody></table></div>")
 
 
+def _sec_dolar(a, cont, tz):
+    if not a:
+        return "<p>Sin datos suficientes para el análisis del dólar hoy.</p>"
+    sc = a["score"]
+    pos = (sc + 100) / 2
+    color_p = "#C1655A" if sc >= 15 else ("#5FA97E" if sc <= -15 else "#8B9099")
+    gauge = f'''<div class="gauge">
+    <div class="g-lab"><span>▼ presión a la baja</span><span>equilibrio</span><span>presión al alza ▲</span></div>
+    <div class="g-bar"><div class="g-mark" style="left:{pos:.1f}%;"></div></div>
+    <div class="g-txt" style="color:{color_p}">{a["presion"]} <span style="font-size:.78rem;color:var(--soft);font-family:-apple-system,Segoe UI,sans-serif;">· puntaje {sc:+d} / 100 · foto del momento, no pronóstico</span></div>
+  </div>'''
+    v = a.get("valor")
+    vj = "n/d"
+    vj_d = ""
+    if v:
+        est = "caro" if v["z"] >= 1 else ("barato" if v["z"] <= -1 else "en línea")
+        vj = "$" + fmt(v["predicho"], 0)
+        vj_d = f'<div class="d {"down" if v["z"] >= 1 else ("up" if v["z"] <= -1 else "flat")}">dólar {est} ({v["gap"]:+.0f})</div>'
+    r = a.get("rsi")
+    rsi_d = "" if r is None else ("sobrecompra" if r >= 70 else ("sobreventa" if r <= 30 else ("momentum alcista" if r >= 50 else "momentum bajista")))
+    kpi = f'''<div class="kpi">
+    <div class="card"><div class="k">Tendencia (20/50)</div><div class="v">{a["trend"][0].capitalize()}</div><div class="d flat">m20 {fmt(a["sma20"], 0)} · m50 {fmt(a["sma50"], 0)}</div></div>
+    <div class="card"><div class="k">RSI 14</div><div class="v">{fmt(r, 0) if r is not None else "n/d"}</div><div class="d flat">{rsi_d}</div></div>
+    <div class="card"><div class="k">Volatilidad</div><div class="v">{fmt(a["atr_pct"], 1) if a.get("atr_pct") else "n/d"}% / día</div><div class="d flat">rango típico ≈ ${fmt(a["price"] * (a["atr_pct"] or 0) / 100, 0)}</div></div>
+    <div class="card"><div class="k">Valor justo</div><div class="v">{vj}</div>{vj_d}</div>
+  </div>'''
+    chart = grafico.velas_dolar(a)
+    chart_html = f'''<div class="chart-card">
+    <div class="chart-title">USD/CLP — últimos 60 días</div>
+    <div class="chart-meta">Velas diarias · medias móviles 20 y 50 · soportes y resistencias donde el precio giró varias veces · retroceso de Fibonacci más cercano</div>
+    {chart}
+    {grafico.LEYENDA_VELAS}
+  </div>''' if chart else ""
+    # motores
+    filas = []
+    emojis = {"cobre": "🧲", "dxy": "💵", "brl": "🇧🇷", "bono": "🏦"}
+    for k, d in a["motores"].items():
+        if not d:
+            continue
+        cr = a["correls"].get(k)
+        ap = a["aportes"].get(k, 0)
+        emp = '<span class="down">▲ al alza</span>' if ap > 1 else ('<span class="up">▼ a la baja</span>' if ap < -1 else '<span class="flat">— neutro</span>')
+        if cr is None:
+            barra, ctxt = "", "n/d"
+        else:
+            w = abs(cr) * 23
+            left = 23 if cr >= 0 else 23 - w
+            col = "#C1655A" if cr >= 0 else "#5FA97E"
+            barra = f'<span class="corr"><i style="left:{left:.0f}px;width:{w:.0f}px;background:{col}"></i></span>'
+            ctxt = f"{cr:+.2f}".replace(".", ",")
+        rel = "inversa" if k == "cobre" else "directa"
+        unidad = "%" if k == "bono" else ""
+        filas.append(f"<tr><td>{emojis[k]} {a['nombres'][k]} <span style=\"color:var(--soft);font-size:.7rem\">({rel})</span></td>"
+                     f"<td>{fmt(d['price'], 2)}{unidad}</td><td>{_flecha(d['chg'], 2)}</td><td>{ctxt}{barra}</td><td>{emp}</td></tr>")
+    motores = ("<h3>Motores del peso</h3>"
+               '<div class="table-wrap"><table><thead><tr><th>Motor</th><th>Último</th><th>Var. día</th><th>Correlación 40 d</th><th>Empuje hoy</th></tr></thead><tbody>'
+               + "".join(filas) + "</tbody></table></div>"
+               '<p style="font-size:.76rem;color:var(--soft);">Correlación: cuánto ha seguido el dólar a cada motor en las últimas semanas (−1 a +1). El cobre mueve al peso al revés (cobre sube, dólar baja); DXY, real y bono, en el mismo sentido. El empuje combina la variación de hoy con esa correlación.</p>')
+    # niveles
+    p = a["price"]
+    res = "".join(f'<div class="row"><b>${fmt(x, 0)}</b><span class="down">+{pct((x / p - 1) * 100)[1:]}</span></div>' for x in a["resistencias"]) or '<div class="row"><span class="flat">sin nivel cercano</span></div>'
+    sop = "".join(f'<div class="row"><b>${fmt(x, 0)}</b><span class="up">−{pct((1 - x / p) * 100)[1:]}</span></div>' for x in a["soportes"]) or '<div class="row"><span class="flat">sin nivel cercano</span></div>'
+    fibtxt = ""
+    if a.get("fib"):
+        rc, pc = a["fib"]["cerca"]
+        fibtxt = f'<p style="font-size:.8rem;">📐 Fibonacci: impulso reciente {a["fib"]["dir"]} entre ${fmt(a["fib"]["lo"], 0)} y ${fmt(a["fib"]["hi"], 0)}; el retroceso más cercano es <strong>{rc:.3f} = ${fmt(pc, 0)}</strong>, zona donde el precio suele reaccionar.</p>'.replace("0.", "0,")
+    niveles = ('<h3>Niveles a vigilar</h3><div class="lvl">'
+               f'<div class="card"><div class="k">Resistencias (arriba)</div>{res}</div>'
+               f'<div class="card"><div class="k">Soportes (abajo)</div>{sop}</div></div>' + fibtxt)
+    # contexto estrategico
+    cards = []
+    c = a.get("carry")
+    if c:
+        ef = "te pagan por tener pesos (apoyo estructural al peso)" if c["diff"] >= 0.25 else ("cuesta tener pesos (viento en contra)" if c["diff"] <= -0.25 else "carry casi neutro")
+        cards.append(f'<div class="card"><div class="k">💰 Carry (tasas Chile − EE.UU.)</div><div class="v">TPM {fmt(c["tpm"], 2)}% − {fmt(c["us"], 2)}% = <strong>{pct(c["diff"], 2)[:-1]}</strong> pts</div><div class="d">{ef}. Factor de largo plazo, no señal diaria.</div></div>')
+    rg = a.get("regimen")
+    if rg:
+        ef = "presión sobre el peso (aversión al riesgo emergente)" if rg["vix"] >= 22 else ("apoyo al peso (apetito por riesgo)" if rg["vix"] < 16 and rg["vix_chg"] <= 3 else "sin sesgo claro de riesgo")
+        sp = f" · S&P 500 {pct(rg['spx_chg'])}" if rg.get("spx_chg") is not None else ""
+        cards.append(f'<div class="card"><div class="k">🌡️ Régimen de riesgo global</div><div class="v">{rg["nivel"].capitalize()} · VIX {fmt(rg["vix"], 1)} ({pct(rg["vix_chg"])}){sp}</div><div class="d">{ef}.</div></div>')
+    vl = a.get("valoracion")
+    if vl:
+        lect = "dólar barato / peso fuerte vs. su historia" if vl["pctl"] < 30 else ("dólar caro / peso débil vs. su historia" if vl["pctl"] > 70 else "en rango normal vs. su historia")
+        cards.append(f'<div class="card"><div class="k">📐 Valoración 3 años</div><div class="v">Percentil <strong>{vl["pctl"]}</strong> / 100 · promedio ${fmt(vl["prom"], 0)}</div>'
+                     f'<div class="pctl"><i style="left:{vl["pctl"]}%"></i></div>'
+                     f'<div class="d">{lect}. Rango 3 años: ${fmt(vl["min"], 0)} – ${fmt(vl["max"], 0)}. Ubica el punto de partida, no da timing.</div></div>')
+    estrat = "<h3>Contexto estratégico (semanas y meses)</h3><div class=\"strat\">" + "".join(cards) + "</div>" if cards else ""
+    # señales y riesgos
+    sen = "".join(f"<li>{html.escape(t)} <span style=\"color:var(--soft);font-size:.74rem\">({ap:+.0f})</span></li>" for t, ap in a["senales"][:6])
+    senales = f"<h3>Por qué (señales que suman o restan)</h3><ul class=\"plain\">{sen}</ul>" if sen else ""
+    rg_html = "".join(f"<li>{html.escape(x)}</li>" for x in a["riesgos"]) or "<li>Sin riesgos técnicos destacados hoy.</li>"
+    riesgos = f"<h3>Riesgos del dólar</h3><ul class=\"plain\">{rg_html}</ul>"
+    lectura = f"<p>{cont.get('dolar', '')}</p>" if cont.get("dolar") else ""
+    nota = '<div class="callout">Tablero cuantitativo del momento (nowcast). Validado con datos de 5 años: el puntaje de presión describe qué empuja al dólar ahora, pero NO anticipa el movimiento del día siguiente. Sirve para entender y gestionar riesgo, no para predecir.</div>'
+    return gauge + lectura + kpi + chart_html + motores + niveles + estrat + senales + riesgos + nota
+
+
 def _sec_agenda(A, meta):
     filas = "".join(
         f"<tr><td>{_fecha_corta(e['fecha'])}{(' ' + e['hora']) if e['hora'] else ''}</td><td>{html.escape(e['titulo'])}"
@@ -292,16 +410,17 @@ def render(D, N, A, cont, meta, tz):
     s4 = _li(cont["geopolitica"])
     s5 = "".join(f"<p>{p}</p>" for p in cont["tasas"]) or "<p>Sin novedades relevantes en tasas hoy.</p>"
     s6 = _sec_cambio(D, tz, cont)
-    s7 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>"
-    s8 = f"<p>{cont['bolsa']}</p>" + _sec_bolsa(D, tz)
-    s9 = _sec_agenda(A, meta)
-    s10 = _li(cont["riesgos"])
-    cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10]
+    s7 = _sec_dolar(meta.get("dolar"), cont, tz)
+    s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>"
+    s9 = f"<p>{cont['bolsa']}</p>" + _sec_bolsa(D, tz)
+    s10 = _sec_agenda(A, meta)
+    s11 = _li(cont["riesgos"])
+    cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11]
     titulos = ["Lo más relevante", "Panorama internacional", "Chile: política y economía", "Riesgos geopolíticos",
-               "Inflación y tasas de política monetaria", "Tipo de cambio", "Oro, cobre y plata", "Mercado bursátil",
-               "Agenda económica", "Principales riesgos de la jornada"]
+               "Inflación y tasas de política monetaria", "Tipo de cambio", "Dólar en profundidad", "Oro, cobre y plata",
+               "Mercado bursátil", "Agenda económica", "Principales riesgos de la jornada"]
     secs = "".join(f'<section id="{SECCIONES[i][0]}"><div class="secnum">{ROMANOS[i]}.</div><h2>{titulos[i]}</h2>{cuerpos[i]}</section>'
-                   for i in range(10))
+                   for i in range(11))
     fuentes = ("Fuentes: Yahoo Finance (dólar, euro, commodities, tasas y bolsas globales), mindicador.cl (UF, dólar observado, TPM), "
                "Google Noticias (titulares de prensa chilena e internacional), ForexFactory (calendario). "
                "El IPSA se toma de los titulares de prensa porque no existe una fuente gratuita en tiempo real; el litio no se incluye por la misma razón.")

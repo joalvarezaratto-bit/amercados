@@ -75,6 +75,14 @@ def construir(sin_ia=False, verbose=True):
         print("   agenda...")
     A = agenda.proximos(TZ)
     meta["resultados"] = agenda.resultados_hoy(TZ)
+    try:
+        import dolar
+        meta["dolar"] = dolar.analizar(D)
+        if verbose and meta["dolar"]:
+            print(f"   dólar: {meta['dolar']['presion']} ({meta['dolar']['score']:+d})")
+    except Exception as e:
+        print("   (aviso) análisis del dólar falló:", str(e)[:80])
+        meta["dolar"] = None
     if verbose:
         print(f"   {len(A)} eventos · noticias...")
     N = noticias.recolectar()

@@ -102,7 +102,17 @@ YAHOO = {
     "usdbrl":  ("USDBRL=X",  "Real (USD/BRL)",     "",    3),
     "usdmxn":  ("USDMXN=X",  "Peso mex. (USD/MXN)","",    3),
     "ech":     ("ECH",       "ETF Chile (ECH)",    "US$", 2),
+    "irx":     ("^IRX",      "T-bill 13 semanas",  "%",   2),   # tasa corta EE.UU. (para el carry)
 }
+
+# ---------------------------------------------------------------------
+#  Seccion "Dolar en profundidad" (mismo cerebro que dolar-bot).
+# ---------------------------------------------------------------------
+DOLAR_SMA_CORTA = 20      # media movil corta (dias)
+DOLAR_SMA_LARGA = 50      # media movil larga (dias)
+DOLAR_VENTANA_CORR = 40   # dias para medir la correlacion con cada motor
+NIVELES_CLAVE = [1010, 1000, 970, 950, 930, 910, 900, 880]   # niveles psicologicos/estructurales
+TPM_FALLBACK = 4.5        # TPM de respaldo si mindicador no responde
 
 # IPSA: Yahoo dejo de actualizar ^IPSA (dato congelado desde jul-2026), asi
 # que se lee de Google Finance (pagina publica). Si falla, se usa el ETF ECH

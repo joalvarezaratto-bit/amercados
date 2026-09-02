@@ -69,3 +69,130 @@ def usdclp_12m(serie, precio_hoy=None, etiqueta_hoy=""):
                f"y mínimo ${_m(vals[i_min])} ({_lab(serie[i_min][0])}, {vals[i_min]-prom:+.0f}). "
                f"Hoy está {vals[-1]-prom:+.0f} respecto del promedio.")
     return svg, prom, resumen
+
+
+# ---------------------------------------------------------------- velas dólar
+def _f0(v):
+    return f"{v:,.0f}".replace(",", ".")
+
+
+def velas_dolar(a, n=60):
+    """Grafico SVG de velas diarias del USD/CLP con medias 20/50 (y su cinta),
+    soportes, resistencias y Fibonacci. Etiquetas en una columna derecha
+    (sin tapar velas). a = dolar.analizar()."""
+    import datetime as dt
+    import dolar as DL
+    candles = a["candles"]
+    if len(candles) < 30:
+        return ""
+    v = candles[-n:]
+    s20 = DL.sma_serie(candles, 20)[-len(v):]
+    s50 = DL.sma_serie(candles, 50)[-len(v):]
+    niveles = a["resistencias"][:2] + a["soportes"][:2]
+    lo = min([c["l"] for c in v] + niveles)
+    hi = max([c["h"] for c in v] + niveles)
+    pad = (hi - lo) * 0.10 or 1
+    lo, hi = lo - pad, hi + pad
+    X0, X1, Y0, Y1 = 4.0, 318.0, 10.0, 208.0     # area de velas
+    GX = 324.0                                    # inicio de la columna de etiquetas
+    W = (X1 - X0) / len(v)
+    def y(p):
+        return Y1 - (p - lo) / (hi - lo) * (Y1 - Y0)
+    def x(i):
+        return X0 + W * (i + 0.5)
+    F = 'font-family="-apple-system,Segoe UI,Helvetica,sans-serif"'
+    out = []
+    # fondo del area + rejilla
+    out.append(f'<rect x="{X0}" y="{Y0}" width="{X1-X0}" height="{Y1-Y0}" fill="#16191D" rx="4"/>')
+    for k in range(1, 5):
+        yy = Y0 + (Y1 - Y0) * k / 5
+        out.append(f'<line x1="{X0}" y1="{yy:.1f}" x2="{X1}" y2="{yy:.1f}" stroke="#262A30" stroke-width="0.7"/>')
+    # cinta entre medias (tendencia): cobre si m20>m50, hielo si m20<m50
+    if s20 and s50:
+        off = len(v) - len(s50)
+        k = len(s50)
+        top = " ".join(f"{x(i+off):.1f},{y(s20[len(s20)-k+i]):.1f}" for i in range(k))
+        bot = " ".join(f"{x(i+off):.1f},{y(s50[i]):.1f}" for i in range(k - 1, -1, -1))
+        col = "#C97A45" if s20[-1] >= s50[-1] else "#7FA8B8"
+        out.append(f'<polygon points="{top} {bot}" fill="{col}" opacity="0.10"/>')
+    # niveles (lineas)
+    for p in a["resistencias"][:2]:
+        out.append(f'<line x1="{X0}" y1="{y(p):.1f}" x2="{X1}" y2="{y(p):.1f}" stroke="#C1655A" stroke-width="0.9" stroke-dasharray="5,3" opacity="0.75"/>')
+    for p in a["soportes"][:2]:
+        out.append(f'<line x1="{X0}" y1="{y(p):.1f}" x2="{X1}" y2="{y(p):.1f}" stroke="#5FA97E" stroke-width="0.9" stroke-dasharray="5,3" opacity="0.75"/>')
+    fib = a.get("fib")
+    fib_ok = fib and 0 < fib["cerca"][0] < 1 and lo < fib["cerca"][1] < hi
+    if fib_ok:
+        pc = fib["cerca"][1]
+        out.append(f'<line x1="{X0}" y1="{y(pc):.1f}" x2="{X1}" y2="{y(pc):.1f}" stroke="#E3C9AE" stroke-width="0.8" stroke-dasharray="1.5,3" opacity="0.8"/>')
+    # medias
+    def poly(serie, color, w):
+        off = len(v) - len(serie)
+        pts = " ".join(f"{x(i+off):.1f},{y(p):.1f}" for i, p in enumerate(serie))
+        return f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="{w}" stroke-linejoin="round" stroke-linecap="round"/>'
+    if s50:
+        out.append(poly(s50, "#7FA8B8", 1.3))
+    if s20:
+        out.append(poly(s20, "#C97A45", 1.5))
+    # barras de rango del dia (max-min), coloreadas por si el cierre subio o
+    # bajo vs el dia anterior (las velas FX de Yahoo traen apertura = cierre,
+    # asi que un cuerpo de vela no aporta). Encima, la linea de cierres con
+    # relleno suave: es lo que se lee de un vistazo.
+    bw = max(2.2, W * 0.55)
+    for i, c in enumerate(v):
+        prev = v[i-1]["c"] if i > 0 else c["o"]
+        col = "#5FA97E" if c["c"] >= prev else "#C1655A"
+        xx = x(i)
+        out.append(f'<rect x="{xx-bw/2:.1f}" y="{y(c["h"]):.1f}" width="{bw:.1f}" height="{max(1.0, y(c["l"])-y(c["h"])):.1f}" rx="1" fill="{col}" opacity="0.38"/>')
+    pts = " ".join(f"{x(i):.1f},{y(c['c']):.1f}" for i, c in enumerate(v))
+    out.append('<defs><linearGradient id="clpArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDEDEA" stop-opacity="0.16"/><stop offset="100%" stop-color="#EDEDEA" stop-opacity="0"/></linearGradient></defs>')
+    out.append(f'<polygon points="{pts} {x(len(v)-1):.1f},{Y1} {x(0):.1f},{Y1}" fill="url(#clpArea)"/>')
+    out.append(f'<polyline points="{pts}" fill="none" stroke="#EDEDEA" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>')
+    # precio actual: linea + punto
+    p = a["price"]
+    out.append(f'<line x1="{X0}" y1="{y(p):.1f}" x2="{X1}" y2="{y(p):.1f}" stroke="#EDEDEA" stroke-width="0.7" stroke-dasharray="2,3" opacity="0.55"/>')
+    out.append(f'<circle cx="{x(len(v)-1):.1f}" cy="{y(p):.1f}" r="2.6" fill="#fff" stroke="#15171A" stroke-width="1"/>')
+    # ---- columna derecha: eje + pildoras sin choques ----
+    for k in range(0, 6):
+        yy = Y0 + (Y1 - Y0) * k / 5
+        pv = hi - (hi - lo) * k / 5
+        out.append(f'<text x="{GX}" y="{yy+2.5:.1f}" font-size="6.5" fill="#5F6570" {F}>{_f0(pv)}</text>')
+    pills = [(y(p), f"${p:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), "#EDEDEA", "#15171A", True)]
+    for r_ in a["resistencias"][:2]:
+        pills.append((y(r_), f"R {_f0(r_)}", "#3A2220", "#E4A79E", False))
+    for s_ in a["soportes"][:2]:
+        pills.append((y(s_), f"S {_f0(s_)}", "#1B2A21", "#9AD1B0", False))
+    if fib_ok:
+        pills.append((y(fib["cerca"][1]), f"Fib {fib['cerca'][0]:.3f}".replace(".", ","), "#3A2A1E", "#E3C9AE", False))
+    pills.sort(key=lambda t: t[0])
+    PH = 11.0
+    ys = [t[0] for t in pills]
+    for i in range(1, len(ys)):          # empujar hacia abajo si se pisan
+        if ys[i] - ys[i-1] < PH + 1:
+            ys[i] = ys[i-1] + PH + 1
+    for i in range(len(ys) - 2, -1, -1):  # y hacia arriba si se salen
+        if ys[i+1] - ys[i] < PH + 1:
+            ys[i] = ys[i+1] - PH - 1
+    for (yy0, txt, bg, fg, bold), yy in zip(pills, ys):
+        w = 6 + 4.2 * len(txt)
+        out.append(f'<line x1="{X1}" y1="{yy0:.1f}" x2="{GX+24}" y2="{yy:.1f}" stroke="{fg}" stroke-width="0.5" opacity="0.45"/>')
+        out.append(f'<rect x="{GX+24}" y="{yy-PH/2:.1f}" width="{w:.0f}" height="{PH}" rx="3" fill="{bg}"/>')
+        out.append(f'<text x="{GX+24+w/2:.1f}" y="{yy+2.6:.1f}" font-size="7" fill="{fg}" text-anchor="middle" {"font-weight=\"700\"" if bold else ""} {F}>{txt}</text>')
+    # fechas
+    for i in (0, len(v) // 3, 2 * len(v) // 3, len(v) - 1):
+        f = dt.datetime.fromtimestamp(v[i]["t"], dt.timezone.utc)
+        anc = "start" if i == 0 else ("end" if i == len(v) - 1 else "middle")
+        out.append(f'<text x="{x(i):.1f}" y="{Y1+11}" font-size="7" fill="#8B9099" text-anchor="{anc}" {F}>{f.day} {_lab((f.year, f.month)).split("-")[0]}</text>')
+    return ('<svg viewBox="0 0 400 222" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
+            + "".join(out) + "</svg>")
+
+
+LEYENDA_VELAS = ('<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.66rem;color:#8B9099;margin-top:8px;">'
+                 '<span><i style="display:inline-block;width:14px;height:2px;background:#C97A45;vertical-align:middle;margin-right:5px;"></i>media 20 días</span>'
+                 '<span><i style="display:inline-block;width:14px;height:2px;background:#7FA8B8;vertical-align:middle;margin-right:5px;"></i>media 50 días</span>'
+                 '<span><i style="display:inline-block;width:14px;height:0;border-top:2px dashed #C1655A;vertical-align:middle;margin-right:5px;"></i>resistencia</span>'
+                 '<span><i style="display:inline-block;width:14px;height:0;border-top:2px dashed #5FA97E;vertical-align:middle;margin-right:5px;"></i>soporte</span>'
+                 '<span><i style="display:inline-block;width:14px;height:0;border-top:2px dotted #E3C9AE;vertical-align:middle;margin-right:5px;"></i>Fibonacci</span>'
+                 '<span><i style="display:inline-block;width:14px;height:2px;background:#EDEDEA;vertical-align:middle;margin-right:5px;"></i>cierre diario</span>'
+                 '<span><i style="display:inline-block;width:6px;height:10px;background:#5FA97E;opacity:.5;vertical-align:middle;margin-right:2px;"></i><i style="display:inline-block;width:6px;height:10px;background:#C1655A;opacity:.5;vertical-align:middle;margin-right:5px;"></i>rango del día (sube / baja)</span>'
+                 '<span><i style="display:inline-block;width:14px;height:8px;background:#C97A45;opacity:.25;vertical-align:middle;margin-right:5px;"></i>cinta de tendencia (entre medias)</span></div>')
