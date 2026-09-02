@@ -261,7 +261,20 @@ def actualizar(gate=False):
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
     cont = ed["cont"]
-    html_txt = informe.render(D, {}, A, cont, meta, TZ)
+    N = {}
+    if cont.get("modo") != "ia":
+        # informe por reglas: los titulares tambien se renuevan (no cuesta nada).
+        # Con IA se conserva el texto de la mañana para no pagar 4 redacciones.
+        import noticias, redactor
+        print("   titulares frescos...")
+        N = noticias.recolectar()
+        hechos = redactor.frases_datos(D, TZ, meta)
+        meta["hechos"] = hechos
+        cont = redactor.redactar_reglas(D, N, A, meta, hechos, TZ)
+        cont["modo"] = "reglas"
+        meta["texto_de"] = ""          # todo es de ahora: la cabecera dice "Datos hasta las"
+        meta["ia_motivo"] = ed["cont"].get("ia_motivo") or "edición viva por reglas (texto y titulares de esta hora)"
+    html_txt = informe.render(D, N, A, cont, meta, TZ)
     ruta = _escribir_salidas(html_txt, ahora)
     s = _state()
     s.setdefault("actualizaciones", {})
