@@ -181,7 +181,7 @@ EXCLUIR = ("venezuela bolívar", "banxico", "peso mexicano", "peso colombiano",
 #  a) ForexFactory (gratis): reportes USD alto impacto + China (mueve el cobre).
 #  b) Eventos FIJOS que ForexFactory no cubre (Chile) o que conviene tener
 #     siempre a la vista. Formato: ("AAAA-MM-DD", "descripcion", "Alto|Medio").
-#     Fechas del Banco Central: verificar en bcentral.cl (calendario RPM).
+#     Fechas del Banco Central 2026 (8-sep, 27-oct, 15-dic) verificadas en bcentral.cl.
 # ---------------------------------------------------------------------
 AGENDA_DIAS = 10   # cuantos dias hacia adelante mirar
 EVENTOS_FIJOS = [
