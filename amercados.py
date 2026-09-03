@@ -88,6 +88,8 @@ def construir(sin_ia=False, verbose=True):
         print("   (aviso) análisis del dólar falló:", str(e)[:80])
         meta["dolar"] = None
     meta["bolsa"] = _bolsa_santiago(verbose)
+    meta["cripto"] = _cripto(verbose)
+    meta["delta"] = _delta_informe(D, meta, ahora, guardar=True)
     if verbose:
         print(f"   {len(A)} eventos · noticias...")
     N = noticias.recolectar()
@@ -268,6 +270,8 @@ def actualizar(gate=False):
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
     meta["bolsa"] = _bolsa_santiago(True)
+    meta["cripto"] = _cripto(True)
+    meta["delta"] = _delta_informe(D, meta, ahora, guardar=False)
     cont = ed["cont"]
     N = {}
     if cont.get("modo") != "ia":
@@ -336,6 +340,52 @@ def _bolsa_santiago(verbose=True):
     except Exception as e:
         print("   (aviso) bolsa de Santiago falló:", str(e)[:80])
         return None
+
+
+def _cripto(verbose=True):
+    try:
+        import cripto
+        k = cripto.recolectar()
+        if verbose and k:
+            btc = next((m for m in k["monedas"] if m["tk"] == "BTC"), None)
+            print(f"   cripto: BTC {btc['price']:,.0f} ({btc['chg']:+.1f}%)" + (f" · F&G {k['fng']['valor']}" if k.get("fng") else ""))
+        return k
+    except Exception as e:
+        print("   (aviso) cripto falló:", str(e)[:80])
+        return None
+
+
+def _delta_informe(D, meta, ahora, guardar):
+    """Compara con la foto guardada del informe de la mañana ANTERIOR y, si
+    corresponde, guarda la foto de hoy. Devuelve {desde, items} o None."""
+    from redactor import fmt, _q, _fecha_corta
+    foto = {"fecha": ahora.strftime("%Y-%m-%d")}
+    for k in ("usdclp", "cobre", "brent", "oro", "spx", "btc", "vix", "us10y"):
+        q = _q(D, k)
+        if q and q.get("price") is not None:
+            foto[k] = q["price"]
+    b = meta.get("bolsa")
+    if b and b.get("nivel"):
+        foto["ipsa"] = b["nivel"]
+    s = _state()
+    prev = s.get("foto_informe")
+    out = None
+    if prev and prev.get("fecha") and prev["fecha"] < foto["fecha"]:
+        nombres = {"usdclp": ("Dólar", "$", 2), "ipsa": ("IPSA est.", "", 0), "cobre": ("Cobre", "US$", 2),
+                   "brent": ("Brent", "US$", 2), "oro": ("Oro", "US$", 0), "spx": ("S&P 500", "", 0),
+                   "btc": ("Bitcoin", "US$", 0), "vix": ("VIX", "", 1), "us10y": ("Tesoro 10a", "", 2)}
+        items = []
+        for k, (n, u, dec) in nombres.items():
+            if k in prev and k in foto and prev[k]:
+                chg = (foto[k] / prev[k] - 1) * 100
+                items.append((n, (u + fmt(foto[k], dec)) + ("%" if k == "us10y" else ""), chg))
+        d0 = dt.date.fromisoformat(prev["fecha"])
+        dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][d0.weekday()]
+        out = {"desde": f"{dia} {_fecha_corta(d0)}", "items": items}
+    if guardar:
+        s["foto_informe"] = foto
+        _save_state(s)
+    return out
 
 
 def _toca_flash(ahora):

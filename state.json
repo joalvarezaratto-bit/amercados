@@ -21,5 +21,17 @@
   "fuente": "Diario Financiero",
   "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9XOE5NWU40Q0ZRY2Vid0ljRFg0YVJkX3dtc00tc1F6TjdQMl8xeUxQZmIxb3NsaEY4aW5fXzZ4LTJmOE5UeUFJek5WeFpBTnZQc3diUjlYaVpaeFdHaEVac1VCUC1NbVBm?oc=5",
   "texto": "IPSA sigue desafiando a la incertidumbre y sube a niveles de 11.500 puntos al inicio de la tarde junto con bolsas de la regi\u00f3n"
+ },
+ "foto_informe": {
+  "fecha": "2026-09-02",
+  "usdclp": 937.36,
+  "cobre": 6.597,
+  "brent": 95.21,
+  "oro": 4432.2,
+  "spx": 7666.6,
+  "btc": 77035.56,
+  "vix": 15.2,
+  "us10y": 4.796,
+  "ipsa": 11500.0
  }
 }

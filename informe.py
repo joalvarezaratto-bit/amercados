@@ -106,6 +106,12 @@ CSS = r"""
   .lvl .row b{color:#fff;font-weight:600;}
   .pctl{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,#5FA97E,#2B2F35 50%,#C1655A);margin-top:8px;}
   .pctl i{position:absolute;top:-3px;width:3px;height:12px;background:#fff;border-radius:2px;transform:translateX(-50%);}
+  .delta{padding:12px 20px;border-bottom:1px solid var(--line);background:var(--bg2);}
+  .delta .d-lab{text-transform:uppercase;letter-spacing:.14em;font-size:.6rem;color:var(--copper);font-weight:700;margin-bottom:6px;}
+  .delta .d-row{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:#D3D4D2;}
+  .delta .d-row span b{color:#fff;font-weight:600;}
+  .fng{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,#C1655A 0%,#8B9099 50%,#5FA97E 100%);margin:8px 0 4px;}
+  .fng i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px var(--paper);transform:translateX(-50%);}
   .strat{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0;}
   .strat .card{min-width:0;}
   .strat .card .v{font-size:.92rem;} .strat .card .d{font-size:.74rem;color:#B9BCC2;margin-top:5px;line-height:1.45;}
@@ -131,8 +137,8 @@ ANDES = ('<svg class="andes" viewBox="0 0 400 58" preserveAspectRatio="none">'
 SECCIONES = [("sec1", "Lo más relevante"), ("sec2", "Panorama internacional"), ("sec3", "Chile"),
              ("sec4", "Riesgos geopolíticos"), ("sec5", "Inflación y tasas"), ("sec6", "Tipo de cambio"),
              ("sec7", "Dólar en profundidad"), ("sec8", "Oro, cobre y plata"), ("sec9", "Mercado bursátil"),
-             ("sec10", "Agenda económica"), ("sec11", "Riesgos de la jornada")]
-ROMANOS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"]
+             ("sec10", "Cripto"), ("sec11", "Agenda económica"), ("sec12", "Riesgos de la jornada")]
+ROMANOS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
 
 
 def _cls(chg):
@@ -426,6 +432,56 @@ def _sec_dolar(a, cont, tz):
     return gauge + lectura + kpi + chart_html + motores + niveles + estrat + senales + riesgos + nota
 
 
+def _sec_cripto(k, cont, tz):
+    if not k:
+        return "<p>Sin datos cripto hoy.</p>"
+    import cripto as CR
+    btc = next((m for m in k["monedas"] if m["tk"] == "BTC"), None)
+    f, g = k.get("fng"), k.get("global")
+    cards = '<div class="kpi">'
+    if btc:
+        cards += f'<div class="card"><div class="k">₿ Bitcoin</div><div class="v">US${fmt(btc["price"], 0)}</div><div class="d {_cls(btc["chg"])}">{_flecha(btc["chg"])} hoy</div></div>'
+    if f:
+        cards += (f'<div class="card"><div class="k">Miedo y codicia</div><div class="v">{f["valor"]} <span style="font-size:.72rem;color:var(--soft)">/ 100</span></div>'
+                  f'<div class="fng"><i style="left:{f["valor"]}%"></i></div><div class="d flat">{CR.clase_es(f["clase"])}{(" · ayer " + str(f["ayer"])) if f.get("ayer") is not None else ""}</div></div>')
+    if g:
+        cards += f'<div class="card"><div class="k">Dominancia BTC</div><div class="v">{fmt(g["btc_dom"], 1)}%</div><div class="d flat">ether {fmt(g["eth_dom"], 1)}%</div></div>'
+        cards += f'<div class="card"><div class="k">Cap. total</div><div class="v">US${fmt(g["mcap"] / 1e12, 2)} B</div><div class="d {_cls(g["mcap_24h"])}">{_flecha(g["mcap_24h"])} 24 h</div></div>'
+    cards += "</div>"
+    filas = "".join(f"<tr><td>{m['nombre']} <span style=\"color:var(--soft);font-size:.7rem\">{m['tk']}</span></td><td>US${fmt(m['price'], 2 if m['price'] < 100 else 0)}</td>"
+                    f"<td>{_flecha(m['chg'])}</td><td>{_flecha(m['v7']) if m.get('v7') is not None else '—'}</td><td>{_flecha(m['v30']) if m.get('v30') is not None else '—'}</td></tr>"
+                    for m in k["monedas"])
+    tabla = ('<div class="table-wrap"><table><thead><tr><th>Moneda</th><th>Precio</th><th>Hoy</th><th>7 días</th><th>30 días</th></tr></thead><tbody>' + filas + "</tbody></table></div>")
+    chart = ""
+    if btc and len(btc.get("candles") or []) >= 30:
+        cs = btc["candles"][-30:]
+        lo, hi = min(c["c"] for c in cs), max(c["c"] for c in cs)
+        pad = (hi - lo) * 0.1 or 1
+        lo, hi = lo - pad, hi + pad
+        X0, X1, Y0, Y1 = 4, 356, 8, 78
+        xs = [X0 + (X1 - X0) * j / (len(cs) - 1) for j in range(len(cs))]
+        ys = [Y1 - (c["c"] - lo) / (hi - lo) * (Y1 - Y0) for c in cs]
+        pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
+        col = "#5FA97E" if cs[-1]["c"] >= cs[0]["c"] else "#C1655A"
+        chart = (f'<div class="chart-card"><div class="chart-title">Bitcoin — 30 días</div><div class="chart-meta">Cierres diarios · {fmt(lo + pad, 0)} – {fmt(hi - pad, 0)} US$</div>'
+                 f'<svg viewBox="0 0 360 86" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
+                 f'<defs><linearGradient id="btcA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="{col}" stop-opacity="0.3"/><stop offset="100%" stop-color="{col}" stop-opacity="0"/></linearGradient></defs>'
+                 f'<polygon points="{pts} {xs[-1]:.1f},{Y1} {xs[0]:.1f},{Y1}" fill="url(#btcA)"/><polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round"/>'
+                 f'<circle cx="{xs[-1]:.1f}" cy="{ys[-1]:.1f}" r="2.6" fill="#fff" stroke="#15171A"/></svg></div>')
+    lectura = f"<p>{cont.get('cripto', '')}</p>" if cont.get("cripto") else ""
+    nota = '<p style="font-size:.76rem;color:var(--soft);">Fuentes: Yahoo Finance (precios), alternative.me (miedo y codicia), CoinGecko (dominancia y capitalización). Cambios de 7 y 30 días sobre cierres diarios.</p>'
+    return lectura + cards + chart + tabla + nota
+
+
+def _franja_delta(meta):
+    """'Desde el informe anterior': cuanto se movio cada activo clave."""
+    dl = meta.get("delta")
+    if not dl or not dl.get("items"):
+        return ""
+    items = "".join(f'<span>{html.escape(n)} <b>{v}</b> {_flecha(chg, 1)}</span>' for n, v, chg in dl["items"])
+    return f'<div class="delta"><div class="d-lab">Desde el informe del {dl["desde"]}</div><div class="d-row">{items}</div></div>'
+
+
 def _sec_agenda(A, meta):
     filas = "".join(
         f"<tr><td>{_fecha_corta(e['fecha'])}{(' ' + e['hora']) if e['hora'] else ''}</td><td>{html.escape(e['titulo'])}"
@@ -469,14 +525,15 @@ def render(D, N, A, cont, meta, tz):
     s7 = _sec_dolar(meta.get("dolar"), cont, tz)
     s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>"
     s9 = f"<p>{cont['bolsa']}</p>" + _sec_santiago(meta.get("bolsa"), tz) + "<h3>Bolsas globales</h3>" + _sec_bolsa(D, tz)
-    s10 = _sec_agenda(A, meta)
-    s11 = _li(cont["riesgos"])
-    cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11]
+    s10 = _sec_cripto(meta.get("cripto"), cont, tz)
+    s11 = _sec_agenda(A, meta)
+    s12 = _li(cont["riesgos"])
+    cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12]
     titulos = ["Lo más relevante", "Panorama internacional", "Chile: política y economía", "Riesgos geopolíticos",
                "Inflación y tasas de política monetaria", "Tipo de cambio", "Dólar en profundidad", "Oro, cobre y plata",
-               "Mercado bursátil", "Agenda económica", "Principales riesgos de la jornada"]
+               "Mercado bursátil", "Cripto", "Agenda económica", "Principales riesgos de la jornada"]
     secs = "".join(f'<section id="{SECCIONES[i][0]}"><div class="secnum">{ROMANOS[i]}.</div><h2>{titulos[i]}</h2>{cuerpos[i]}</section>'
-                   for i in range(11))
+                   for i in range(12))
     fuentes = ("Fuentes: Yahoo Finance (dólar, euro, commodities, tasas y bolsas globales), mindicador.cl (UF, dólar observado, TPM), "
                "Google Noticias (titulares de prensa chilena e internacional), ForexFactory (calendario). "
                "El IPSA se toma de los titulares de prensa porque no existe una fuente gratuita en tiempo real; el litio no se incluye por la misma razón.")
@@ -503,6 +560,7 @@ def render(D, N, A, cont, meta, tz):
 <div class="sticky-bar"><span class="wm"><span class="a">A</span><span class="rest">Mercados</span></span><span class="sdate">{fecha_corta}</span></div>
 <div class="ticker-wrap"><div class="ticker-track">{_ticker(D, tz, meta.get("bolsa"))}</div></div>
 <div class="quickindex"><div class="qi-label">En este informe</div><div class="qi-row">{qi}</div></div>
+{_franja_delta(meta)}
 {aviso}
 {secs}
 </main>

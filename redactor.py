@@ -177,6 +177,7 @@ Responde ÚNICAMENTE con un JSON válido con esta forma exacta (sin texto antes 
  "geopolitica": ["<strong>Tema:</strong> explicación de por qué importa para los mercados", ...],   // 3-4 ítems
  "tasas": ["párrafo sobre inflación y tasas (Fed, Tesoro, TPM Chile) con las cifras entregadas", ...],   // 1-2 párrafos
  "cambio": "párrafo del dólar/peso: nivel, variación, qué lo movió (cobre, DXY, riesgo global) según los titulares",
+ "cripto": "2-3 frases sobre bitcoin y el mercado cripto con las cifras entregadas (precio, sentimiento, dominancia); sin predecir",
  "dolar": "lectura de 3-5 frases del ANÁLISIS CUANTITATIVO DEL DÓLAR: qué motor manda hoy, si el dólar está caro o barato vs. su valor justo, qué niveles vigilar y qué dice el contexto estratégico (carry, régimen, valoración). Describe el presente; no predigas.",
  "commodities": "párrafo sobre petróleo, cobre, oro y plata con las cifras y titulares entregados",
  "bolsa": "párrafo sobre IPSA (según prensa), Wall Street y bolsas globales con las cifras entregadas",
@@ -205,6 +206,15 @@ def _prompt_usuario(D, N, A, meta, hechos, tz):
         L.append("")
         L.append("BOLSA DE SANTIAGO (acciones del IPSA, datos de Yahoo; el índice es estimado):")
         L += [f"- {h}" for h in fb]
+    try:
+        import cripto as CRP
+        fk = CRP.frases(meta.get("cripto"))
+    except Exception:
+        fk = []
+    if fk:
+        L.append("")
+        L.append("CRIPTO:")
+        L += [f"- {h}" for h in fk]
     L.append("")
     L.append("AGENDA (próximos días):")
     for e in A[:12]:
@@ -380,9 +390,15 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
         if a["resistencias"] or a["soportes"]:
             partes.append("Niveles a vigilar: " + (f"resistencia ${fmt(a['resistencias'][0], 0)}" if a["resistencias"] else "") + (" y " if a["resistencias"] and a["soportes"] else "") + (f"soporte ${fmt(a['soportes'][0], 0)}" if a["soportes"] else "") + ".")
         lectura_dolar = " ".join(partes)
+    try:
+        import cripto as CRP
+        lectura_cripto = " ".join(CRP.frases(meta.get("cripto")))
+    except Exception:
+        lectura_cripto = ""
     return {
         "titular": html.escape(titular),
         "dolar": lectura_dolar,
+        "cripto": lectura_cripto,
         "relevante": relevante,
         "internacional": internacional,
         "chile": lista("chile"),
@@ -404,8 +420,9 @@ def _validar(cont):
         ok = ok and isinstance(cont.get(k), list) and all(isinstance(x, str) for x in cont[k])
     for k in ("cambio", "commodities", "bolsa"):
         ok = ok and isinstance(cont.get(k), str)
-    if not isinstance(cont.get("dolar"), str):
-        cont["dolar"] = ""
+    for k in ("dolar", "cripto"):
+        if not isinstance(cont.get(k), str):
+            cont[k] = ""
     return bool(ok)
 
 
@@ -430,7 +447,7 @@ def redactar(D, N, A, meta, tz):
         cont["internacional"] = [{"h3": _sanear(x.get("h3", "")), "parrafos": [_sanear(p) for p in x["parrafos"]]} for x in cont["internacional"]]
         for k in ("chile", "geopolitica", "tasas", "riesgos"):
             cont[k] = [_sanear(x) for x in cont[k]]
-        for k in ("cambio", "commodities", "bolsa", "dolar"):
+        for k in ("cambio", "commodities", "bolsa", "dolar", "cripto"):
             cont[k] = _sanear(cont[k])
         cont["modo"] = "ia"
         return cont

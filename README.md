@@ -2,8 +2,10 @@
 
 Genera cada mañana (días hábiles, ~07:05 hora de Chile) un informe HTML con el
 formato de *AMercados* (titular del día, lo más relevante, panorama internacional,
-Chile, geopolítica, tasas, dólar con gráfico de 12 meses, commodities, bolsa,
-agenda y riesgos) y lo manda a Telegram como archivo + resumen.
+Chile, geopolítica, tasas, dólar con gráfico de 12 meses, **dólar en profundidad**
+(motores, valor justo, niveles, gráfico de 60 días), commodities, **Bolsa de
+Santiago** (30 acciones del IPSA, IPSA estimado) y bolsas globales, **cripto**,
+agenda y riesgos, más una franja "desde el informe anterior") y lo manda a Telegram como archivo + resumen.
 
 ## Fuentes (todas gratis, sin API key)
 - **Yahoo Finance**: dólar, EUR/USD, cobre, Brent/WTI, oro, plata, DXY, bonos del Tesoro, VIX, bolsas, bitcoin, real, ETF Chile (ECH).
