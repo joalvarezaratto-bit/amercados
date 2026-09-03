@@ -44,6 +44,7 @@ def usdclp_12m(serie, precio_hoy=None, etiqueta_hoy=""):
         x = min(max(xs[i], 60), 320)
         return (f'<text x="{x:.1f}" y="{ys[i]+dy:.1f}" font-size="8" fill="#EDEDEA" '
                 f'text-anchor="middle" font-weight="600" font-family="-apple-system,Segoe UI,sans-serif">{t}</text>')
+    hits = "".join(f'<circle class="hit" cx="{xs[i]:.1f}" cy="{ys[i]:.1f}" r="9" data-tip="{_lab(serie[i][0])}: ${_m(vals[i])} ({desv[i]:+.0f} vs. prom.)"/>' for i in range(n))
     extra = dot(i_min, 2.8) + txt(i_min, f"${_m(vals[i_min])} ({_lab(serie[i_min][0])}, mín.)", 12)
     if i_max != n - 1:
         extra += dot(i_max, 2.8) + txt(i_max, f"${_m(vals[i_max])} ({_lab(serie[i_max][0])}, máx.)", -8)
@@ -59,7 +60,7 @@ def usdclp_12m(serie, precio_hoy=None, etiqueta_hoy=""):
   <text x="346" y="117" font-size="7.5" fill="#C97A45" font-weight="700" text-anchor="end" font-family="-apple-system,Segoe UI,sans-serif">prom. ${_m(prom)}</text>
   <polygon points="{pts} {xs[-1]:.1f},190 {xs[0]:.1f},190" fill="url(#usdArea)"/>
   <polyline points="{pts}" fill="none" stroke="#C97A45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-  {extra}{labs}
+  {extra}{labs}{hits}
 </svg>'''
     # resumen en palabras (para el parrafo bajo el grafico)
     arriba = [_lab(serie[i][0]) for i in range(n) if desv[i] > amp * 0.25]
@@ -178,6 +179,14 @@ def velas_dolar(a, n=60):
         out.append(f'<line x1="{X1}" y1="{yy0:.1f}" x2="{GX+24}" y2="{yy:.1f}" stroke="{fg}" stroke-width="0.5" opacity="0.45"/>')
         out.append(f'<rect x="{GX+24}" y="{yy-PH/2:.1f}" width="{w:.0f}" height="{PH}" rx="3" fill="{bg}"/>')
         out.append(f'<text x="{GX+24+w/2:.1f}" y="{yy+2.6:.1f}" font-size="7" fill="{fg}" text-anchor="middle" {"font-weight=\"700\"" if bold else ""} {F}>{txt}</text>')
+    # zonas invisibles para el tooltip (una por dia)
+    for i, c in enumerate(v):
+        f = dt.datetime.fromtimestamp(c["t"], dt.timezone.utc)
+        prev = v[i-1]["c"] if i > 0 else c["o"]
+        chg = (c["c"] / prev - 1) * 100 if prev else 0
+        tip = (f"{f.day} {_lab((f.year, f.month)).split('-')[0]} · cierre ${c['c']:,.2f} ({chg:+.2f}%)&lt;br&gt;máx {c['h']:,.0f} · mín {c['l']:,.0f}"
+               .replace(",", "X").replace(".", ",").replace("X", "."))
+        out.append(f'<rect class="hit" x="{x(i)-W/2:.1f}" y="{Y0}" width="{W:.1f}" height="{Y1-Y0}" data-tip="{tip}"/>')
     # fechas
     for i in (0, len(v) // 3, 2 * len(v) // 3, len(v) - 1):
         f = dt.datetime.fromtimestamp(v[i]["t"], dt.timezone.utc)
@@ -225,7 +234,9 @@ def barras_bolsa(b, max_n=30):
         col = "#5FA97E" if a["chg"] >= 0 else "#C1655A"
         x0, x1 = (mid, x(a["chg"])) if a["chg"] >= 0 else (x(a["chg"]), mid)
         out.append(f'<text x="{LX-6}" y="{yy+7.5}" font-size="7" fill="#D3D4D2" text-anchor="end" {F}>{a["nombre"]}</text>')
+        tip = f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · {a['sector']}".replace(",", "X").replace(".", ",").replace("X", ".")
         out.append(f'<rect x="{x0:.1f}" y="{yy+1.5}" width="{max(0.8, x1-x0):.1f}" height="{RH-3}" rx="1.5" fill="{col}" opacity="0.85"/>')
+        out.append(f'<rect class="hit" x="{LX-110}" y="{yy}" width="{RX-LX+120}" height="{RH}" data-tip="{tip}"/>')
         tx = (x1 + 3) if a["chg"] >= 0 else (x0 - 3)
         anc = "start" if a["chg"] >= 0 else "end"
         lab = f"{a['chg']:+.1f}%".replace(".", ",")
