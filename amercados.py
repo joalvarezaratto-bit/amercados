@@ -16,6 +16,7 @@ Comandos:
   python3 amercados.py health       -> avisa si hoy no salio el informe (lo usa la nube)
   python3 amercados.py actualizar   -> edicion viva: regenera la pagina con datos frescos y el texto de hoy
   python3 amercados.py actualizar --gate -> solo a las horas ACTUALIZAR_HORAS (dias habiles)
+  python3 amercados.py pdf          -> convierte el ultimo informe a PDF (usa Chrome) en salida/
   python3 amercados.py selftest     -> prueba todo sin enviar nada
 """
 import os
@@ -143,6 +144,11 @@ def enviar(ruta, cont, meta):
     titular = cont["titular"]
     pie = f"📰 <b>{C.NOMBRE}</b> · {ahora:%d-%m-%Y}\n{titular}"
     ok = T.send_document(ruta, caption=pie, filename=f"AMercados-{ahora:%Y-%m-%d}.html")
+    pdf = a_pdf(ruta)
+    if pdf:
+        T.send_document(pdf, caption=f"📄 {C.NOMBRE} · {ahora:%d-%m-%Y} · PDF para compartir",
+                        filename=f"AMercados-{ahora:%Y-%m-%d}.pdf")
+    # (send_document acepta application/pdf igual; Telegram lo muestra como PDF)
     L = ["<b>Lo más relevante</b>"]
     for it in cont["relevante"][:4]:
         L.append(f"• <b>{it['tag']}</b> · {_texto_plano(it['html'])}")
@@ -284,6 +290,38 @@ def actualizar(gate=False):
     return ruta
 
 
+def _chrome():
+    """Ruta a Chrome/Chromium (Mac o Linux de GitHub Actions). None si no hay."""
+    cands = ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+             "/Applications/Chromium.app/Contents/MacOS/Chromium",
+             shutil.which("google-chrome"), shutil.which("google-chrome-stable"),
+             shutil.which("chromium-browser"), shutil.which("chromium")]
+    for c in cands:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+
+def a_pdf(ruta_html):
+    """Imprime el HTML a PDF con Chrome sin ventana. Devuelve la ruta del PDF o None."""
+    import subprocess
+    ch = _chrome()
+    if not ch:
+        print("   (aviso) no hay Chrome para generar el PDF")
+        return None
+    salida = ruta_html[:-5] + ".pdf"
+    try:
+        subprocess.run([ch, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
+                        "--no-pdf-header-footer", "--virtual-time-budget=4000",
+                        f"--print-to-pdf={salida}", "file://" + os.path.abspath(ruta_html)],
+                       check=True, timeout=120, capture_output=True)
+        if os.path.exists(salida) and os.path.getsize(salida) > 10000:
+            return salida
+    except Exception as e:
+        print("   (aviso) PDF falló:", str(e)[:100])
+    return None
+
+
 def _toca_flash(ahora):
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
@@ -402,6 +440,9 @@ def main():
         health()
     elif cmd == "actualizar":
         actualizar(gate="--gate" in args)
+    elif cmd == "pdf":
+        p = a_pdf(os.path.join(SALIDA, "ultimo.html"))
+        print("PDF:", p or "no se pudo generar")
     elif cmd == "selftest":
         print("1) datos"); import datos, noticias, agenda
         D = datos.recolectar(); assert D["yahoo"].get("usdclp"), "sin dólar"

@@ -109,6 +109,14 @@ CSS = r"""
   .strat{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0;}
   .strat .card{min-width:0;}
   .strat .card .v{font-size:.92rem;} .strat .card .d{font-size:.74rem;color:#B9BCC2;margin-top:5px;line-height:1.45;}
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body{background:var(--bg);}
+    .ticker-track{animation:none;}
+    .sticky-bar{position:static;}
+    section,.chart-card,.commod-card,.card{break-inside:avoid;}
+    main{max-width:none;}
+  }
   footer{padding:18px 20px;font-size:.66rem;color:var(--soft);line-height:1.6;border-top:1px solid var(--line);}
   footer b{color:var(--copper);}
 """

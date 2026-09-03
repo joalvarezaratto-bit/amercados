@@ -6,3 +6,4 @@ cache_*.json
 ai_breaker.json
 salida/*.html
 !salida/.gitkeep
+salida/*.pdf
