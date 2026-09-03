@@ -437,9 +437,9 @@ def _sec_santiago(b, tz):
     if not b:
         return ""
     ses = _fecha_corta(b["sesion"]) if b.get("sesion") else ""
-    hora = dt.datetime.fromtimestamp(b["market_time"], tz) if b.get("market_time") else None
-    abierto = hora and (dt.datetime.now(tz) - hora).total_seconds() < 30 * 60 and hora.weekday() < 5 and 9 <= hora.hour < 17
-    estado = "en curso" if abierto else "cierre"
+    ahora = dt.datetime.now(tz)
+    abierto = _mercado_abierto(ahora) and b.get("sesion") == ahora.date()
+    estado = "sesión en curso" if abierto else "cierre"
     nivel = f"{fmt(b['nivel'], 0)}" if b.get("nivel") else "n/d"
     nivel_d = (f"desde {fmt(b['nivel_base'], 2)} ({_fecha_corta(b['nivel_fecha'])}, prensa)" if b.get("nivel_base") else "sin cierre exacto de referencia")
     lider = b["sectores"][0] if b["sectores"] else None
@@ -899,11 +899,12 @@ def render(D, N, A, cont, meta, tz):
   else{{document.querySelectorAll('.reveal').forEach(function(s){{s.classList.add('in');}}); document.querySelectorAll('.chart-card').forEach(function(c){{c.classList.add('go');}});}}
   setTimeout(function(){{document.querySelectorAll('.reveal:not(.in)').forEach(function(s){{s.classList.add('in');}});}},2500);
   // cifras que cuentan hasta su valor (tarjetas)
-  function countUp(el){{var txt=el.textContent; var m=txt.match(/-?[0-9][0-9.,]*/); if(!m) return; var raw=m[0]; var dec=(raw.match(/,(\d+)$/)||[,''])[1].length; var v=parseFloat(raw.replace(/\./g,'').replace(',','.')); if(isNaN(v)||Math.abs(v)>1e9) return;
+  function countUp(el){{var txt=el.textContent; el.setAttribute('data-final',txt); var m=txt.match(/-?[0-9][0-9.,]*/); if(!m) return; var raw=m[0]; var dec=(raw.match(/,(\d+)$/)||[,''])[1].length; var v=parseFloat(raw.replace(/\./g,'').replace(',','.')); if(isNaN(v)||Math.abs(v)>1e9) return;
     var t0=null, dur=900; function fmt(x){{var s=x.toFixed(dec); var p=s.split('.'); p[0]=p[0].replace(/\B(?=(\d{{3}})+(?!\d))/g,'.'); return p.join(',');}}
     function step(ts){{if(!t0) t0=ts; var k=Math.min(1,(ts-t0)/dur); k=1-Math.pow(1-k,3); el.textContent=txt.replace(raw,fmt(v*k)); if(k<1) requestAnimationFrame(step); else el.textContent=txt;}}
     requestAnimationFrame(step);}}
   if(!reduce && 'IntersectionObserver' in window){{var co=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{countUp(e.target); co.unobserve(e.target);}}}});}},{{threshold:.6}}); document.querySelectorAll('.kpi .card .v, .stripe .card .v, .commod-card .cv').forEach(function(el){{if(!el.querySelector('span,svg')) co.observe(el);}});}}
+  window.addEventListener('beforeprint',function(){{document.querySelectorAll('[data-final]').forEach(function(el){{el.textContent=el.getAttribute('data-final');}});}});
   // "hace X min"
   var hc=document.getElementById('hace'); if(hc){{var ts=parseInt(hc.getAttribute('data-ts'),10)*1000; function upd(){{var m=Math.round((Date.now()-ts)/60000); hc.textContent = m<1?'· recién':(m<60?'· hace '+m+' min':(m<1440?'· hace '+Math.round(m/60)+' h':'· hace '+Math.round(m/1440)+' d'));}} upd(); setInterval(upd,30000);}}
   // plegar / desplegar todo
