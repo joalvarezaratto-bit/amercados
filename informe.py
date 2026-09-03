@@ -109,13 +109,16 @@ CSS = r"""
   .strat{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0;}
   .strat .card{min-width:0;}
   .strat .card .v{font-size:.92rem;} .strat .card .d{font-size:.74rem;color:#B9BCC2;margin-top:5px;line-height:1.45;}
+  @page{size:A4;margin:0;}
   @media print{
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    body{background:var(--bg);}
+    html,body{background:var(--bg);margin:0;}
+    body{padding:0 0 24px;}
     .ticker-track{animation:none;}
     .sticky-bar{position:static;}
-    section,.chart-card,.commod-card,.card{break-inside:avoid;}
-    main{max-width:none;}
+    .chart-card,.commod-card,.card,.table-wrap,li,.callout{break-inside:avoid;}
+    h2,h3{break-after:avoid;}
+    main{max-width:none;padding:0 6mm 8mm;}
   }
   footer{padding:18px 20px;font-size:.66rem;color:var(--soft);line-height:1.6;border-top:1px solid var(--line);}
   footer b{color:var(--copper);}
