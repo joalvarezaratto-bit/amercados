@@ -155,11 +155,19 @@ def _valor(q, dec=None):
     return fmt(q["price"], q.get("dec", 2) if dec is None else dec)
 
 
-def _ticker(D, tz):
+def _ticker(D, tz, b=None):
     u, e, cu, br = _q(D, "usdclp"), _q(D, "eurclp"), _q(D, "cobre"), _q(D, "brent")
     ch = D.get("chile") or {}
     ip = D.get("ipsa")
     items = []
+    if b and b.get("nivel"):
+        ip = None
+        items_ipsa = ("IPSA (estimado)", fmt(b["nivel"], 0), _flecha(b["var"], 2))
+    elif b:
+        ip = None
+        items_ipsa = ("IPSA (est. sesión)", "", _flecha(b["var"], 2))
+    else:
+        items_ipsa = None
     if u:
         ahora = dt.datetime.now(tz)
         abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
@@ -174,7 +182,9 @@ def _ticker(D, tz):
                 items.append((f"Dólar (cierre {dia})", "$" + fmt(c1["c"]), _flecha((c1["c"] - c0["c"]) / c0["c"] * 100, 2)))
             else:
                 items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
-    if ip:
+    if items_ipsa:
+        items.append(items_ipsa)
+    elif ip:
         items.append(("IPSA (cierre, prensa)", ("≈" if ip.get("aprox") else "") + fmt(ip["price"], 0 if ip.get("aprox") else 2), _flecha(ip.get("chg"))))
     if e:
         items.append(("Euro", "$" + fmt(e["price"]), _flecha(e["chg"])))
@@ -268,6 +278,41 @@ def _sec_commod(D, tz):
     tabla = ('<div class="table-wrap"><table><thead><tr><th>Metal / energía</th><th>Cierre ant.</th><th>Hoy</th><th>Var.</th></tr></thead><tbody>'
              + "".join(filas) + "</tbody></table></div>")
     return grid + tabla
+
+
+def _sec_santiago(b, tz):
+    """Bloque 'Bolsa de Santiago' con las acciones del IPSA."""
+    if not b:
+        return ""
+    ses = _fecha_corta(b["sesion"]) if b.get("sesion") else ""
+    hora = dt.datetime.fromtimestamp(b["market_time"], tz) if b.get("market_time") else None
+    abierto = hora and (dt.datetime.now(tz) - hora).total_seconds() < 30 * 60 and hora.weekday() < 5 and 9 <= hora.hour < 17
+    estado = "en curso" if abierto else "cierre"
+    nivel = f"{fmt(b['nivel'], 0)}" if b.get("nivel") else "n/d"
+    nivel_d = (f"desde {fmt(b['nivel_base'], 2)} ({_fecha_corta(b['nivel_fecha'])}, prensa)" if b.get("nivel_base") else "sin cierre exacto de referencia")
+    lider = b["sectores"][0] if b["sectores"] else None
+    rezag = b["sectores"][-1] if b["sectores"] else None
+    cards = f'''<div class="kpi">
+    <div class="card"><div class="k">IPSA estimado · {estado} {ses}</div><div class="v {_cls(b["var"])}">{_flecha(b["var"], 2)}</div><div class="d flat">{b["n"]} acciones, ponderación aprox.</div></div>
+    <div class="card"><div class="k">Nivel estimado</div><div class="v">{nivel}</div><div class="d flat">{nivel_d}</div></div>
+    <div class="card"><div class="k">Amplitud</div><div class="v"><span class="up">{b["n_alzas"]} ▲</span> · <span class="down">{b["n_bajas"]} ▼</span></div><div class="d flat">alzas · bajas</div></div>
+    <div class="card"><div class="k">Sectores</div><div class="v" style="font-size:.8rem">{(lider[0] + " " + pct(lider[1])) if lider else "n/d"}</div><div class="d flat">{("rezagado: " + rezag[0] + " " + pct(rezag[1])) if rezag else ""}</div></div>
+  </div>'''
+    def fila(a):
+        return (f"<tr><td>{html.escape(a['nombre'])} <span style=\"color:var(--soft);font-size:.68rem\">{html.escape(a['sector'])}</span></td>"
+                f"<td>${fmt(a['price'], 2 if a['price'] < 1000 else 0)}</td><td>{_flecha(a['chg'], 2)}</td></tr>")
+    t_alzas = ('<div class="table-wrap"><table><thead><tr><th>Mayores alzas</th><th>Precio</th><th>Var.</th></tr></thead><tbody>'
+               + "".join(fila(a) for a in b["alzas"]) + ("<tr><td colspan=3>Ninguna acción al alza</td></tr>" if not b["alzas"] else "") + "</tbody></table></div>")
+    t_bajas = ('<div class="table-wrap"><table><thead><tr><th>Mayores bajas</th><th>Precio</th><th>Var.</th></tr></thead><tbody>'
+               + "".join(fila(a) for a in b["bajas"]) + ("<tr><td colspan=3>Ninguna acción a la baja</td></tr>" if not b["bajas"] else "") + "</tbody></table></div>")
+    sect = ('<div class="table-wrap"><table><thead><tr><th>Sector</th><th>Var. ponderada</th><th>Acciones</th></tr></thead><tbody>'
+            + "".join(f"<tr><td>{html.escape(s)}</td><td>{_flecha(v, 2)}</td><td>{n}</td></tr>" for s, v, n, _ in b["sectores"]) + "</tbody></table></div>")
+    chart = grafico.barras_bolsa(b)
+    chart_html = f'''<div class="chart-card"><div class="chart-title">Acciones del IPSA — variación de la sesión</div>
+    <div class="chart-meta">Las {b["n"]} acciones más grandes, de mayor alza a mayor baja · fuente Yahoo Finance (cierre anterior oficial de cada papel)</div>{chart}</div>''' if chart else ""
+    nota = ("<p style=\"font-size:.76rem;color:var(--soft);\">El IPSA estimado se calcula con las acciones de arriba y pesos aproximados; el índice oficial "
+            "lo publica la Bolsa de Santiago y puede diferir en décimas. Cuando la prensa informa el cierre exacto, el nivel se ancla a esa cifra.</p>")
+    return "<h3>Bolsa de Santiago</h3>" + cards + chart_html + t_alzas + t_bajas + sect + nota
 
 
 def _sec_bolsa(D, tz):
@@ -423,7 +468,7 @@ def render(D, N, A, cont, meta, tz):
     s6 = _sec_cambio(D, tz, cont)
     s7 = _sec_dolar(meta.get("dolar"), cont, tz)
     s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>"
-    s9 = f"<p>{cont['bolsa']}</p>" + _sec_bolsa(D, tz)
+    s9 = f"<p>{cont['bolsa']}</p>" + _sec_santiago(meta.get("bolsa"), tz) + "<h3>Bolsas globales</h3>" + _sec_bolsa(D, tz)
     s10 = _sec_agenda(A, meta)
     s11 = _li(cont["riesgos"])
     cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11]
@@ -456,7 +501,7 @@ def render(D, N, A, cont, meta, tz):
   {ANDES}
 </header>
 <div class="sticky-bar"><span class="wm"><span class="a">A</span><span class="rest">Mercados</span></span><span class="sdate">{fecha_corta}</span></div>
-<div class="ticker-wrap"><div class="ticker-track">{_ticker(D, tz)}</div></div>
+<div class="ticker-wrap"><div class="ticker-track">{_ticker(D, tz, meta.get("bolsa"))}</div></div>
 <div class="quickindex"><div class="qi-label">En este informe</div><div class="qi-row">{qi}</div></div>
 {aviso}
 {secs}

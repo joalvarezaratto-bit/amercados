@@ -196,3 +196,39 @@ LEYENDA_VELAS = ('<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.66
                  '<span><i style="display:inline-block;width:14px;height:2px;background:#EDEDEA;vertical-align:middle;margin-right:5px;"></i>cierre diario</span>'
                  '<span><i style="display:inline-block;width:6px;height:10px;background:#5FA97E;opacity:.5;vertical-align:middle;margin-right:2px;"></i><i style="display:inline-block;width:6px;height:10px;background:#C1655A;opacity:.5;vertical-align:middle;margin-right:5px;"></i>rango del día (sube / baja)</span>'
                  '<span><i style="display:inline-block;width:14px;height:8px;background:#C97A45;opacity:.25;vertical-align:middle;margin-right:5px;"></i>cinta de tendencia (entre medias)</span></div>')
+
+
+def barras_bolsa(b, max_n=30):
+    """Barras horizontales (verde/rojo) con la variacion diaria de cada accion,
+    ordenadas de mayor alza a mayor baja. b = bolsa.analizar()."""
+    if not b or not b.get("acciones"):
+        return ""
+    acc = b["acciones"][:max_n]
+    n = len(acc)
+    RH = 11.0
+    H = n * RH + 14
+    W = 400
+    LX, RX = 118.0, 356.0
+    mid = (LX + RX) / 2
+    amp = max(abs(a["chg"]) for a in acc) or 1
+    def x(v):
+        return mid + (v / amp) * (RX - LX) / 2 * 0.96
+    F = 'font-family="-apple-system,Segoe UI,Helvetica,sans-serif"'
+    out = [f'<line x1="{mid:.1f}" y1="6" x2="{mid:.1f}" y2="{H-8}" stroke="#3A3F46" stroke-width="0.8"/>']
+    for k in (-1, -0.5, 0.5, 1):
+        xx = x(k * amp)
+        out.append(f'<line x1="{xx:.1f}" y1="6" x2="{xx:.1f}" y2="{H-8}" stroke="#23272C" stroke-width="0.6"/>')
+        lab = f"{k*amp:+.1f}%".replace(".", ",")
+        out.append(f'<text x="{xx:.1f}" y="{H-1}" font-size="6" fill="#5F6570" text-anchor="middle" {F}>{lab}</text>')
+    for i, a in enumerate(acc):
+        yy = 8 + i * RH
+        col = "#5FA97E" if a["chg"] >= 0 else "#C1655A"
+        x0, x1 = (mid, x(a["chg"])) if a["chg"] >= 0 else (x(a["chg"]), mid)
+        out.append(f'<text x="{LX-6}" y="{yy+7.5}" font-size="7" fill="#D3D4D2" text-anchor="end" {F}>{a["nombre"]}</text>')
+        out.append(f'<rect x="{x0:.1f}" y="{yy+1.5}" width="{max(0.8, x1-x0):.1f}" height="{RH-3}" rx="1.5" fill="{col}" opacity="0.85"/>')
+        tx = (x1 + 3) if a["chg"] >= 0 else (x0 - 3)
+        anc = "start" if a["chg"] >= 0 else "end"
+        lab = f"{a['chg']:+.1f}%".replace(".", ",")
+        out.append(f'<text x="{tx:.1f}" y="{yy+7.5}" font-size="6.5" fill="{col}" text-anchor="{anc}" font-weight="600" {F}>{lab}</text>')
+    return (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
+            + "".join(out) + "</svg>")

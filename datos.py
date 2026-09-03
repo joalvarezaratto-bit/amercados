@@ -108,14 +108,15 @@ def _yahoo(symbol, interval="1d", rng="1y"):
         return None
 
 
-def yahoo(symbol, force=False):
+def yahoo(symbol, force=False, rng="1y"):
     cache = _cache_read()
-    d = cache.get(symbol)
+    key = symbol if rng == "1y" else f"{symbol}|{rng}"
+    d = cache.get(key)
     if d and not force and time.time() - d.get("ts", 0) < TTL:
         return d
-    fresh = _yahoo(symbol)
+    fresh = _yahoo(symbol, rng=rng)
     if fresh:
-        cache[symbol] = fresh
+        cache[key] = fresh
         _cache_write(cache)
         return fresh
     return d   # ultima copia conocida (o None)

@@ -87,6 +87,7 @@ def construir(sin_ia=False, verbose=True):
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80])
         meta["dolar"] = None
+    meta["bolsa"] = _bolsa_santiago(verbose)
     if verbose:
         print(f"   {len(A)} eventos · noticias...")
     N = noticias.recolectar()
@@ -266,6 +267,7 @@ def actualizar(gate=False):
         meta["dolar"] = dolar.analizar(D)
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
+    meta["bolsa"] = _bolsa_santiago(True)
     cont = ed["cont"]
     N = {}
     if cont.get("modo") != "ia":
@@ -322,6 +324,20 @@ def a_pdf(ruta_html):
     return None
 
 
+def _bolsa_santiago(verbose=True):
+    """Acciones del IPSA + resumen (alzas/bajas/sectores/IPSA estimado)."""
+    try:
+        import bolsa
+        acc = bolsa.recolectar()
+        b = bolsa.analizar(acc, TZ, cierre_prensa=_state().get("ipsa_cierre"))
+        if verbose and b:
+            print(f"   bolsa: IPSA est. {b['var']:+.2f}% · {b['n_alzas']}▲ {b['n_bajas']}▼")
+        return b
+    except Exception as e:
+        print("   (aviso) bolsa de Santiago falló:", str(e)[:80])
+        return None
+
+
 def _toca_flash(ahora):
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
@@ -367,12 +383,21 @@ def flash(gate=False):
     print(f"[{ahora:%H:%M}] flash: datos...")
     D = datos.recolectar()
     _guardar_cierre_ipsa(D, ahora)
+    b = _bolsa_santiago(True)
     print("   noticias...")
     N = noticias.recolectar()
     _avisar_salud(D, N, ahora, "flash")
     nuevas = noticias.nuevas(N, top=C.FLASH_TOP)
     res = agenda.resultados_hoy(TZ)
-    L = [f"⚡ <b>{C.NOMBRE} · Flash {ahora:%H:%M}</b> · {ahora:%d-%m-%Y}", _linea_precios(D), ""]
+    L = [f"⚡ <b>{C.NOMBRE} · Flash {ahora:%H:%M}</b> · {ahora:%d-%m-%Y}", _linea_precios(D)]
+    if b:
+        from redactor import pct as _pct, fmt as _fmt
+        L.append(f"🏛️ Bolsa de Santiago: IPSA est. <b>{_pct(b['var'], 2)}</b>"
+                 + (f" (≈{_fmt(b['nivel'], 0)})" if b.get("nivel") else "")
+                 + f" · {b['n_alzas']}▲ {b['n_bajas']}▼"
+                 + (f" · sube {b['alzas'][0]['nombre']} {_pct(b['alzas'][0]['chg'])}" if b["alzas"] else "")
+                 + (f" · cae {b['bajas'][0]['nombre']} {_pct(b['bajas'][0]['chg'])}" if b["bajas"] else ""))
+    L.append("")
     if nuevas:
         L.append("<b>Titulares nuevos</b>")
         for it in nuevas:

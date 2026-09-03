@@ -112,6 +112,45 @@ YAHOO = {
 }
 
 # ---------------------------------------------------------------------
+#  Bolsa de Santiago: acciones grandes del IPSA en Yahoo (sufijo .SN).
+#  (ticker, nombre, sector, peso aprox. en el IPSA en %). Los pesos son
+#  APROXIMADOS (el IPSA oficial se rebalancea): sirven para estimar la
+#  variacion del indice, y el informe lo rotula como "estimado".
+# ---------------------------------------------------------------------
+IPSA_ACCIONES = [
+    ("SQM-B.SN",      "SQM",              "Minería/litio",  8.5),
+    ("CHILE.SN",      "Banco de Chile",   "Bancos",         8.5),
+    ("BSANTANDER.SN", "Santander Chile",  "Bancos",         6.5),
+    ("FALABELLA.SN",  "Falabella",        "Retail",         6.5),
+    ("COPEC.SN",      "Copec",            "Energía",        6.0),
+    ("LTM.SN",        "LATAM Airlines",   "Transporte",     6.0),
+    ("CENCOSUD.SN",   "Cencosud",         "Retail",         6.0),
+    ("BCI.SN",        "BCI",              "Bancos",         5.0),
+    ("ENELAM.SN",     "Enel Américas",    "Energía",        4.5),
+    ("CMPC.SN",       "CMPC",             "Forestal",       4.0),
+    ("ENELCHILE.SN",  "Enel Chile",       "Energía",        3.5),
+    ("VAPORES.SN",    "Vapores",          "Transporte",     3.0),
+    ("QUINENCO.SN",   "Quiñenco",         "Holding",        2.5),
+    ("CCU.SN",        "CCU",              "Consumo",        2.5),
+    ("COLBUN.SN",     "Colbún",           "Energía",        2.5),
+    ("ITAUCL.SN",     "Itaú Chile",       "Bancos",         2.0),
+    ("PARAUCO.SN",    "Parque Arauco",    "Inmobiliario",   2.0),
+    ("MALLPLAZA.SN",  "Mallplaza",        "Inmobiliario",   2.0),
+    ("CENCOMALLS.SN", "Cencosud Shopping","Inmobiliario",   2.0),
+    ("ANDINA-B.SN",   "Andina-B",         "Consumo",        1.5),
+    ("ENTEL.SN",      "Entel",            "Telecom",        1.5),
+    ("AGUAS-A.SN",    "Aguas Andinas",    "Servicios",      1.0),
+    ("CAP.SN",        "CAP",              "Minería/acero",  1.0),
+    ("CONCHATORO.SN", "Concha y Toro",    "Consumo",        1.0),
+    ("ECL.SN",        "Engie Chile",      "Energía",        1.0),
+    ("SMU.SN",        "SMU",              "Retail",         1.0),
+    ("IAM.SN",        "IAM",              "Servicios",      0.5),
+    ("RIPLEY.SN",     "Ripley",           "Retail",         0.5),
+    ("SONDA.SN",      "Sonda",            "Tecnología",     0.5),
+    ("SALFACORP.SN",  "Salfacorp",        "Construcción",   0.3),
+]
+
+# ---------------------------------------------------------------------
 #  Seccion "Dolar en profundidad" (mismo cerebro que dolar-bot).
 # ---------------------------------------------------------------------
 DOLAR_SMA_CORTA = 20      # media movil corta (dias)

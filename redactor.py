@@ -196,6 +196,15 @@ def _prompt_usuario(D, N, A, meta, hechos, tz):
         L.append("")
         L.append("ANÁLISIS CUANTITATIVO DEL DÓLAR (modelo propio: motores, correlaciones, niveles):")
         L += [f"- {h}" for h in fd]
+    try:
+        import bolsa as BL
+        fb = BL.frases(meta.get("bolsa"))
+    except Exception:
+        fb = []
+    if fb:
+        L.append("")
+        L.append("BOLSA DE SANTIAGO (acciones del IPSA, datos de Yahoo; el índice es estimado):")
+        L += [f"- {h}" for h in fb]
     L.append("")
     L.append("AGENDA (próximos días):")
     for e in A[:12]:
@@ -332,6 +341,13 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     cambio_txt = " ".join(h for h in hechos if h.startswith(("Dólar", "Variación semanal", "Euro:", "Real")))
     comm_txt = " ".join(h for h in hechos if h.startswith(("Petróleo", "Cobre", "Oro", "Plata")))
     bolsa_txt = " ".join(h for h in hechos if h.startswith(("IPSA", "ETF", "S&P", "Futuro", "Euro Stoxx", "Nikkei", "Hang", "Shanghái", "VIX", "Bitcoin")))
+    try:
+        import bolsa as BL
+        fb = BL.frases(meta.get("bolsa"))
+        if fb:
+            bolsa_txt = " ".join(x.replace(".", ",").replace(", ", ". ", 0) for x in []) or (" ".join(fb).replace(".", ",").replace(",,", ".").replace(", ", ". ") if False else " ".join(fb)) + " " + bolsa_txt
+    except Exception:
+        pass
     riesgos = []
     for e in A:
         if e["impacto"] == "Alto":
