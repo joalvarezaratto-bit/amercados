@@ -95,8 +95,42 @@ CSS = r"""
   .headline-frame{border-top:1px solid var(--copper);border-bottom:1px solid var(--copper);padding:14px 0;margin-bottom:16px;}
   .headline-label{text-transform:uppercase;letter-spacing:.18em;font-size:.6rem;color:var(--copper);font-weight:600;margin-bottom:8px;}
 
+  /* cinta de cotizaciones estilo sala de operaciones */
+  .tape-wrap{background:#0A0C0F;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;position:relative;padding:9px 0;cursor:pointer;}
+  :root[data-theme="light"] .tape-wrap{background:#14171B;}
+  .tape-wrap::before,.tape-wrap::after{content:"";position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none;}
+  .tape-wrap::before{left:0;background:linear-gradient(90deg,#0A0C0F,rgba(10,12,15,0));} .tape-wrap::after{right:0;background:linear-gradient(270deg,#0A0C0F,rgba(10,12,15,0));}
+  :root[data-theme="light"] .tape-wrap::before{background:linear-gradient(90deg,#14171B,rgba(20,23,27,0));} :root[data-theme="light"] .tape-wrap::after{background:linear-gradient(270deg,#14171B,rgba(20,23,27,0));}
+  .tape-track{display:flex;width:max-content;animation:ticker-scroll 110s linear infinite;}
+  .tape-wrap:hover .tape-track,.tape-wrap.paused .tape-track{animation-play-state:paused;}
+  .tape-item{display:flex;align-items:baseline;gap:8px;padding:0 20px;white-space:nowrap;border-right:1px solid #22262C;font-family:var(--f-mono);}
+  .tape-item .tk{font-size:.62rem;color:#8C9199;text-transform:uppercase;letter-spacing:.08em;}
+  .tape-item .tv{font-size:.86rem;font-weight:600;color:#F1EFEA;transition:color .3s,text-shadow .3s;}
+  .tape-item .td{font-size:.7rem;font-weight:600;}
+  .tape-item .td.up{color:#5FB283;} .tape-item .td.down{color:#D06A5C;} .tape-item .td.flat{color:#8C9199;}
+  .tape-item.tick .tv{color:#FFD9B8;text-shadow:0 0 10px rgba(208,138,85,.75);}
+  .tape-item.tick.up .tv{color:#B9F0CF;text-shadow:0 0 10px rgba(95,178,131,.8);} .tape-item.tick.down .tv{color:#FFC1B7;text-shadow:0 0 10px rgba(208,106,92,.8);}
+  .tape-item .spark polyline{stroke:#5FB283;} .tape-item .spark polyline.neg{stroke:#D06A5C;}
+  /* relojes de mercados */
+  .markets{display:flex;gap:6px;overflow-x:auto;padding:8px 22px;background:var(--bg2);border-bottom:1px solid var(--line);scrollbar-width:none;}
+  .markets::-webkit-scrollbar{display:none;}
+  .mk{flex:0 0 auto;display:flex;align-items:center;gap:7px;font-size:.66rem;color:var(--soft);padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-family:var(--f-mono);}
+  .mk b{color:var(--ink);font-weight:600;} .mk i{width:7px;height:7px;border-radius:50%;background:var(--soft2);display:inline-block;}
+  .mk.open i{background:var(--green);animation:pulse 2s infinite;} .mk .st{color:var(--soft);}
+  .mk.open .st{color:var(--green);}
+  /* mapa de calor */
+  .heat{display:flex;flex-wrap:wrap;gap:3px;margin:12px 0 6px;}
+  .tile{position:relative;min-height:54px;border-radius:5px;padding:6px 7px;display:flex;flex-direction:column;justify-content:space-between;color:#F1EFEA;overflow:hidden;cursor:default;transition:transform .2s,filter .2s;opacity:0;transform:scale(.96);}
+  .go .tile{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease;}
+  .tile:hover{filter:brightness(1.15);transform:scale(1.03);z-index:2;}
+  .tile .tn{font-size:.66rem;font-weight:600;line-height:1.1;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+  .tile .tc{font-family:var(--f-mono);font-size:.7rem;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+  .tile.s .tn{font-size:.58rem;} .tile.s .tc{font-size:.6rem;}
+  .heat-leg{display:flex;align-items:center;gap:8px;font-size:.64rem;color:var(--soft);margin-bottom:8px;}
+  .heat-leg i{display:inline-block;width:70px;height:8px;border-radius:4px;background:linear-gradient(90deg,#B8433A,#3A3F46 50%,#2E8B57);}
+
   /* ticker */
-  .ticker-wrap{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;position:relative;padding:10px 0;cursor:pointer;}
+  .ticker-wrap{display:none;}
   .ticker-track{display:flex;width:max-content;animation:ticker-scroll 40s linear infinite;}
   .ticker-wrap:hover .ticker-track,.ticker-wrap.paused .ticker-track{animation-play-state:paused;}
   .ticker-item{display:flex;align-items:baseline;gap:7px;padding:0 22px;white-space:nowrap;border-right:1px solid var(--line);}
@@ -233,6 +267,7 @@ CSS = r"""
     .reveal,header .anim{opacity:1!important;transform:none!important;animation:none!important;}
     svg .draw{stroke-dasharray:none!important;stroke-dashoffset:0!important;animation:none!important;} svg .bar{transform:none!important;animation:none!important;} svg .fill{opacity:1!important;}
     .range-btns{display:none;} .rango{display:none;} .rango[data-rango="60"]{display:block;} header::before{display:none;}
+    .tape-track{animation:none;} .tile{opacity:1!important;transform:none!important;} .markets{display:none;}
     section.collapsed .sec-body{display:block;} .tab-panel{display:block;} .tabs{display:none;}
     .chart-card,.commod-card,.card,.table-wrap,li,.callout{break-inside:avoid;}
     h2,h3{break-after:avoid;}
@@ -429,7 +464,7 @@ def _sec_santiago(b, tz):
     <div class="chart-meta">Las {b["n"]} acciones más grandes, de mayor alza a mayor baja · fuente Yahoo Finance (cierre anterior oficial de cada papel)</div>{chart}</div>''' if chart else ""
     nota = ("<p style=\"font-size:.76rem;color:var(--soft);\">El IPSA estimado se calcula con las acciones de arriba y pesos aproximados; el índice oficial "
             "lo publica la Bolsa de Santiago y puede diferir en décimas. Cuando la prensa informa el cierre exacto, el nivel se ancla a esa cifra.</p>")
-    return cards + chart_html + t_alzas + t_bajas + sect + nota
+    return cards + _heatmap(b) + chart_html + t_alzas + t_bajas + sect + nota
 
 
 def _sec_bolsa(D, tz):
@@ -639,6 +674,79 @@ def _spark(candles, n=12, ancho=44, alto=14):
     return f'<svg class="spark" viewBox="0 0 {ancho} {alto}"><polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.3" stroke-linejoin="round"/></svg>'
 
 
+def _tape(D, tz, b=None, k=None):
+    """Cinta de cotizaciones ampliada (estilo sala de operaciones)."""
+    Y = D.get("yahoo") or {}
+    ch = D.get("chile") or {}
+    items = []
+    def add(nombre, valor, chg, cand=None, dec=1):
+        cls = _cls(chg)
+        sp = ""
+        if cand:
+            sp = _spark(cand).replace("<polyline ", '<polyline class="neg" ' if (chg or 0) < 0 else "<polyline ")
+        items.append((nombre, valor, f'<span class="td {cls}">{("▲ " if cls == "up" else ("▼ " if cls == "down" else "— ")) + pct(chg, dec)}</span>' + sp if chg is not None else '<span class="td flat">—</span>', cls))
+    u = Y.get("usdclp")
+    if u:
+        cierres = DS.cierres_diarios(u["candles"], 2, tz)
+        ahora = dt.datetime.now(tz)
+        abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
+        if not abierto and len(cierres) == 2:
+            c1, c0 = cierres[-1], cierres[-2]
+            dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][c1["fecha"].weekday()]
+            add(f"Dólar cierre {dia}", "$" + fmt(c1["c"]), (c1["c"] - c0["c"]) / c0["c"] * 100, u.get("candles"), 2)
+        else:
+            add("Dólar spot", "$" + fmt(u["price"]), u["chg"], u.get("candles"), 2)
+    if b and b.get("nivel"):
+        add("IPSA est.", fmt(b["nivel"], 0), b["var"], None, 2)
+    elif D.get("ipsa"):
+        ip = D["ipsa"]; add("IPSA prensa", ("≈" if ip.get("aprox") else "") + fmt(ip["price"], 0), ip.get("chg"))
+    if ch.get("uf"):
+        add("UF", "$" + fmt(ch["uf"]["valor"]), None)
+    if ch.get("dolar"):
+        add("Obs. BCCh", "$" + fmt(ch["dolar"]["valor"]), None)
+    for key, nombre, unidad, dec in (("eurclp", "Euro", "$", 2), ("cobre", "Cobre", "US$", 2), ("brent", "Brent", "US$", 2), ("wti", "WTI", "US$", 2),
+                                     ("oro", "Oro", "US$", 0), ("plata", "Plata", "US$", 2), ("spx", "S&P 500", "", 0), ("nq", "Nasdaq fut.", "", 0),
+                                     ("stoxx", "Euro Stoxx", "", 0), ("nikkei", "Nikkei", "", 0), ("hsi", "Hang Seng", "", 0), ("dxy", "DXY", "", 2),
+                                     ("us10y", "Tesoro 10a", "", 2), ("vix", "VIX", "", 1), ("usdbrl", "USD/BRL", "", 3), ("btc", "Bitcoin", "US$", 0), ("ech", "ETF Chile", "US$", 2)):
+        q = Y.get(key)
+        if q and q.get("price") is not None:
+            add(nombre, unidad + fmt(q["price"], dec) + ("%" if key == "us10y" else ""), q["chg"], q.get("candles"), 1)
+    h = "".join(f'<div class="tape-item {cls}"><span class="tk">{k_}</span><span class="tv">{v}</span>{d}</div>' for k_, v, d, cls in items)
+    return h + h
+
+
+def _relojes():
+    """Relojes de mercados (se actualizan por JS): Santiago, Nueva York, Londres, Tokio."""
+    mk = [("scl", "Santiago", "America/Santiago", "09:30", "16:00"), ("nyc", "Nueva York", "America/New_York", "09:30", "16:00"),
+          ("lon", "Londres", "Europe/London", "08:00", "16:30"), ("tyo", "Tokio", "Asia/Tokyo", "09:00", "15:30")]
+    return '<div class="markets">' + "".join(
+        f'<span class="mk" data-tz="{tz_}" data-open="{o}" data-close="{c}"><i></i><b>{n}</b> <span class="hh">--:--</span> <span class="st">…</span></span>'
+        for _, n, tz_, o, c in mk) + "</div>"
+
+
+def _heatmap(b):
+    """Mapa de calor de la Bolsa de Santiago: tamaño = peso, color = variación."""
+    if not b or not b.get("acciones"):
+        return ""
+    acc = sorted(b["acciones"], key=lambda a: -a["peso"])
+    total = sum(a["peso"] for a in acc) or 1
+    tiles = []
+    for a in acc:
+        v = max(-3.0, min(3.0, a["chg"]))
+        k = abs(v) / 3.0
+        if a["chg"] >= 0:
+            bg = f"rgba(46,139,87,{0.25 + 0.6 * k:.2f})"
+        else:
+            bg = f"rgba(184,67,58,{0.25 + 0.6 * k:.2f})"
+        basis = max(9.5, a["peso"] / total * 100 * 2.2)
+        small = "s" if basis < 13 else ""
+        tip = f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · peso aprox. {a['peso']:.1f}%".replace(",", "X").replace(".", ",").replace("X", ".")
+        tiles.append(f'<div class="tile {small}" style="flex:1 1 {basis:.1f}%;background:{bg}" data-tip="{html.escape(tip)}"><span class="tn">{html.escape(a["nombre"])}</span><span class="tc">{pct(a["chg"])}</span></div>')
+    return ('<div class="chart-card"><div class="chart-title">Mapa de calor — Bolsa de Santiago</div>'
+            '<div class="chart-meta">Tamaño = peso aproximado en el IPSA · color = variación de la sesión</div>'
+            '<div class="heat-leg"><span>−3%</span><i></i><span>+3%</span></div><div class="heat">' + "".join(tiles) + "</div></div>")
+
+
 def _tokenizar(html_txt):
     """Reemplaza los colores fijos de graficos/estilos inline por variables
     CSS, para que el modo claro y el oscuro funcionen tambien en los SVG."""
@@ -695,6 +803,8 @@ def render(D, N, A, cont, meta, tz):
     secs = "".join(f'<section id="{SECCIONES[i][0]}"><div class="secnum">{ROMANOS[i]}.</div><div class="sec-head"><h2>{titulos[i]}</h2>{chev}</div><div class="sec-body">{cuerpos[i]}</div></section>'
                    for i in range(12))
     nav = "".join(f'<a href="#{sid}">{nombre}</a>' for sid, nombre in SECCIONES)
+    import json as _json
+    feriados_js = _json.dumps(sorted(C.FERIADOS_CL))
     fuentes = ("Fuentes: Yahoo Finance (dólar, euro, commodities, tasas y bolsas globales), mindicador.cl (UF, dólar observado, TPM), "
                "Google Noticias (titulares de prensa chilena e internacional), ForexFactory (calendario). "
                "El IPSA se toma de los titulares de prensa porque no existe una fuente gratuita en tiempo real; el litio no se incluye por la misma razón.")
@@ -727,7 +837,8 @@ def render(D, N, A, cont, meta, tz):
   </div>
   <nav class="sb-nav">{nav}<a href="#" id="fold" class="fold">Plegar todo</a></nav>
 </div>
-<div class="ticker-wrap"><div class="ticker-track">{_ticker(D, tz, meta.get("bolsa"))}</div></div>
+<div class="tape-wrap" aria-label="Cotizaciones"><div class="tape-track">{_tape(D, tz, meta.get("bolsa"), meta.get("cripto"))}</div></div>
+{_relojes()}
 <div class="quickindex"><div class="qi-label">En este informe</div><div class="qi-row">{qi}</div></div>
 {_franja_delta(meta)}
 {aviso}
@@ -753,8 +864,13 @@ def render(D, N, A, cont, meta, tz):
   function onScroll(){{var h=document.documentElement; var p=(h.scrollTop||document.body.scrollTop)/((h.scrollHeight-h.clientHeight)||1); pr.style.width=(p*100)+'%'; tt.classList.toggle('on',(h.scrollTop||document.body.scrollTop)>600);}}
   window.addEventListener('scroll',onScroll,{{passive:true}}); onScroll();
   tt.addEventListener('click',function(){{window.scrollTo({{top:0,behavior:'smooth'}});}});
-  // ticker: tocar para pausar
-  var tw=document.querySelector('.ticker-wrap'); if(tw) tw.addEventListener('click',function(){{tw.classList.toggle('paused');}});
+  // cinta: tocar para pausar + destellos de "tick" como pantalla de bolsa
+  var tw=document.querySelector('.tape-wrap'); if(tw){{tw.addEventListener('click',function(){{tw.classList.toggle('paused');}});
+    var its=tw.querySelectorAll('.tape-item'); if(its.length && !reduce){{setInterval(function(){{var el=its[Math.floor(Math.random()*its.length)]; el.classList.add('tick'); setTimeout(function(){{el.classList.remove('tick');}},650);}},1400);}}}}
+  // relojes de mercados (hora local de cada plaza + abierto/cerrado + cuenta regresiva)
+  var feriados={feriados_js};
+  function mkUpd(){{document.querySelectorAll('.mk').forEach(function(m){{try{{var tz=m.getAttribute('data-tz'); var now=new Date(); var parts=new Intl.DateTimeFormat('en-GB',{{timeZone:tz,hour:'2-digit',minute:'2-digit',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour12:false}}).formatToParts(now); var g={{}}; parts.forEach(function(p){{g[p.type]=p.value;}}); var hh=parseInt(g.hour,10)%24, mm=parseInt(g.minute,10); var cur=hh*60+mm; var o=m.getAttribute('data-open').split(':'), c=m.getAttribute('data-close').split(':'); var om=parseInt(o[0],10)*60+parseInt(o[1],10), cm=parseInt(c[0],10)*60+parseInt(c[1],10); var wk=g.weekday; var finde=(wk==='Sat'||wk==='Sun'); var fer=(tz==='America/Santiago')&&(feriados.indexOf(g.month+'-'+g.day)>=0||feriados.indexOf(g.year+'-'+g.month+'-'+g.day)>=0); var open=!finde&&!fer&&cur>=om&&cur<cm; m.classList.toggle('open',open); m.querySelector('.hh').textContent=g.hour+':'+g.minute; var st; if(open){{var r=cm-cur; st='abierta · cierra en '+Math.floor(r/60)+'h '+String(r%60).padStart(2,'0')+'m';}} else if(finde||fer){{st=fer?'feriado':'cerrada · fin de semana';}} else if(cur<om){{var r2=om-cur; st='abre en '+Math.floor(r2/60)+'h '+String(r2%60).padStart(2,'0')+'m';}} else {{st='cerrada';}} m.querySelector('.st').textContent=st;}}catch(e){{}}}});}}
+  mkUpd(); setInterval(mkUpd,30000);
   // secciones plegables
   document.querySelectorAll('section .sec-head').forEach(function(h){{h.setAttribute('role','button'); h.setAttribute('tabindex','0');
     function tg(){{h.parentNode.classList.toggle('collapsed');}}
