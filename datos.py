@@ -232,9 +232,18 @@ def fecha_sesion(t, tz):
     return f
 
 
-def cierres_diarios(candles, n=5, tz=None):
+def _cierre_local_guardado():
+    try:
+        return json.load(open(os.path.join(HERE, "state.json"))).get("dolar_cierre")
+    except Exception:
+        return None
+
+
+def cierres_diarios(candles, n=5, tz=None, con_cierre_local=True):
     """Ultimos n cierres diarios COMPLETOS (excluye la vela de hoy si aun se
-    forma). Cada vela sale con 'fecha' = dia de mercado."""
+    forma). Cada vela sale con 'fecha' = dia de mercado. Si el bot guardo el
+    'cierre local' de ayer (spot a las 16:xx) y Yahoo todavia no publica esa
+    vela, se agrega como ultima fila (asi la mañana muestra el cierre de AYER)."""
     tz = tz or dt.timezone.utc
     hoy = dt.datetime.now(tz).date()
     comp = []
@@ -244,6 +253,16 @@ def cierres_diarios(candles, n=5, tz=None):
             c2 = dict(c)
             c2["fecha"] = f
             comp.append(c2)
+    if con_cierre_local:
+        g = _cierre_local_guardado()
+        if g:
+            try:
+                fg = dt.date.fromisoformat(g["fecha"])
+                if fg < hoy and (not comp or comp[-1]["fecha"] < fg):
+                    comp.append({"t": int(dt.datetime(fg.year, fg.month, fg.day, 16, tzinfo=tz).timestamp()),
+                                 "o": g["price"], "h": g["price"], "l": g["price"], "c": g["price"], "fecha": fg, "local": True})
+            except Exception:
+                pass
     return comp[-n:]
 
 

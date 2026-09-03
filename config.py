@@ -187,7 +187,9 @@ NOTICIAS = {
     ],
     "geopolitica": [
         ("intl", "Irán Ormuz Israel ataque when:1d"),
-        ("intl", "Ucrania Rusia guerra negociación when:1d"),
+        ("intl", "Ucrania Rusia guerra ataque OR negociación when:1d"),
+        ("intl", "Europa OTAN Alemania Rusia when:1d"),
+        ("intl", "última hora mercados guerra when:12h"),
         ("intl", "Trump aranceles comercio China when:1d"),
         ("intl", "Venezuela OPEP petróleo EE.UU. when:1d"),
         ("intl", "Taiwán China tensión when:1d"),
@@ -225,6 +227,8 @@ KW = {
     "imacec": 2, "hacienda": 2, "presupuesto": 2, "ipsa": 3, "wall street": 3,
     "bolsa": 1, "china": 2, "recesión": 3, "crisis": 2, "récord": 2, "bce": 2,
     "empleo": 1, "desempleo": 2, "codelco": 2, "litio": 1, "bonos": 2,
+    "ucrania": 3, "rusia": 2, "putin": 2, "otan": 2, "alemania": 2, "europa": 1, "misiles": 2,
+    "drones": 2, "última hora": 2, "urgente": 3, "ahora": 1,
 }
 
 # Titulares de otros paises que se cuelan (se descartan salvo que mencionen Chile).
@@ -238,7 +242,7 @@ EXCLUIR = ("venezuela bolívar", "banxico", "peso mexicano", "peso colombiano",
 #     siempre a la vista. Formato: ("AAAA-MM-DD", "descripcion", "Alto|Medio").
 #     Fechas del Banco Central 2026 (8-sep, 27-oct, 15-dic) verificadas en bcentral.cl.
 # ---------------------------------------------------------------------
-AGENDA_DIAS = 10   # cuantos dias hacia adelante mirar
+AGENDA_DIAS = 14   # cuantos dias hacia adelante mirar
 EVENTOS_FIJOS = [
     ("2026-09-08", "Reunión de Política Monetaria del Banco Central de Chile (TPM)", "Alto"),
     ("2026-09-15", "Reunión de la Fed (FOMC), día 1", "Alto"),

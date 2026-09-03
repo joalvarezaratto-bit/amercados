@@ -216,6 +216,20 @@ def health():
         print("salud ok")
 
 
+def _guardar_cierre_dolar(D, ahora):
+    """A las 16:xx (Chile ya cerro) guarda el spot como 'cierre local' del dia,
+    para que el informe de la mañana diga 'cierre mié.' con la cifra correcta
+    (Yahoo publica la vela diaria con un dia de atraso)."""
+    u = (D.get("yahoo") or {}).get("usdclp")
+    if not u or not u.get("price") or ahora.hour < 16 or ahora.weekday() >= 5:
+        return
+    if not _es_habil(ahora):
+        return
+    s = _state()
+    s["dolar_cierre"] = {"fecha": ahora.strftime("%Y-%m-%d"), "price": u["price"], "hora": ahora.strftime("%H:%M")}
+    _save_state(s)
+
+
 def _guardar_cierre_ipsa(D, ahora):
     """Al flash de la tarde: si la prensa ya publicó el cierre EXACTO del IPSA
     de hoy, se guarda para que el informe de mañana lo use (sin '≈')."""
@@ -269,6 +283,7 @@ def actualizar(gate=False):
         meta["dolar"] = dolar.analizar(D)
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
+    _guardar_cierre_dolar(D, ahora)
     meta["bolsa"] = _bolsa_santiago(True)
     meta["cripto"] = _cripto(True)
     meta["delta"] = _delta_informe(D, meta, ahora, guardar=False)
@@ -433,6 +448,7 @@ def flash(gate=False):
     print(f"[{ahora:%H:%M}] flash: datos...")
     D = datos.recolectar()
     _guardar_cierre_ipsa(D, ahora)
+    _guardar_cierre_dolar(D, ahora)
     b = _bolsa_santiago(True)
     print("   noticias...")
     N = noticias.recolectar()

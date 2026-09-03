@@ -153,7 +153,15 @@ def buscar_seccion(consultas, top, solo_chile=False):
                 continue
             cands.append({"titulo": titulo, "fuente": fuente, "link": e.get("link", ""),
                           "score": _score(full), "firma": f, "fecha": _fecha(e)})
-    cands.sort(key=lambda x: (-x["score"], -(x["fecha"].timestamp() if x["fecha"] else 0)))
+    # relevancia + RECENCIA: una noticia de hace 1 h vale mas que la misma de anoche.
+    # bonus: +4 si tiene menos de 2 h, +3 hasta 4 h, +2 hasta 8 h, +1 hasta 14 h.
+    ahora = dt.datetime.now(dt.timezone.utc)
+    for c in cands:
+        horas = ((ahora - c["fecha"]).total_seconds() / 3600) if c["fecha"] else 24
+        c["horas"] = horas
+        c["base"] = c["score"]   # relevancia sin el bonus de recencia
+        c["score"] += 4 if horas <= 2 else (3 if horas <= 4 else (2 if horas <= 8 else (1 if horas <= 14 else 0)))
+    cands.sort(key=lambda x: (-x["score"], x.get("horas", 99)))
     vistas, unicos = [], []
     for c in cands:
         if _misma(c["firma"], vistas):
@@ -184,7 +192,26 @@ def recolectar(top=None):
         vistas.append(it["firma"])
         rel.append(it)
     out["relevante"] = rel[:6]
+    # ULTIMA HORA: lo mas reciente con relevancia minima (distinto de "lo mas relevante")
+    recientes = [it for it in todas if it.get("fecha") and it.get("horas", 99) <= 6 and it.get("base", 0) >= 5]
+    recientes.sort(key=lambda x: x["horas"])
+    vistas, uh = [], []
+    for it in recientes:
+        if _misma(it["firma"], vistas):
+            continue
+        vistas.append(it["firma"])
+        uh.append(it)
+    out["ultima_hora"] = uh[:6]
     return out
+
+
+def hace(it):
+    """'hace 40 min' / 'hace 3 h' a partir de la fecha de publicacion."""
+    h = it.get("horas")
+    if h is None:
+        return ""
+    m = int(round(h * 60))
+    return f"hace {m} min" if m < 60 else f"hace {int(round(h))} h"
 
 
 # ---------------------------------------------------------------- vistas

@@ -155,6 +155,7 @@ CSS = r"""
   ul.plain li{padding:11px 0;border-bottom:1px solid var(--line);font-size:.88rem;line-height:1.58;color:var(--text);position:relative;padding-left:16px;}
   ul.plain li:last-child{border-bottom:none;}
   ul.plain li::before{content:"";position:absolute;left:0;top:12px;width:6px;height:1px;background:var(--copper);}
+  ul.plain li .tag{display:inline-block;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--copper);margin-right:6px;font-family:var(--f-mono);}
   ul li a{text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s;} ul li a:hover{border-bottom-color:var(--copper);}
 
   .stripe{display:flex;gap:10px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scrollbar-width:thin;}
@@ -656,8 +657,16 @@ def render(D, N, A, cont, meta, tz):
     aviso = ""
     if modo != "ia":
         aviso = f'<div class="callout">Edición automática por reglas (titulares agrupados por sección). Redacción con IA no disponible hoy: {html.escape(meta.get("ia_motivo") or "")}.</div>'
-    # I
+    # I  (+ "Última hora": lo mas reciente, con antigüedad)
     s1 = _li(cont["relevante"], "newsflash", tags=True)
+    uh = (N or {}).get("ultima_hora") or []
+    if uh:
+        import noticias as _NT
+        s1 += ('<h3>Última hora <span style="font-weight:400;color:var(--soft);text-transform:none;letter-spacing:0">· publicado en las últimas horas</span></h3><ul class="plain">'
+               + "".join(f'<li><span class="tag" style="color:var(--soft)">{_NT.hace(it)}</span>'
+                         f'<a href="{html.escape(it.get("link") or "")}">{html.escape(it["titulo"])}</a>'
+                         f' <span style="color:var(--soft);font-size:.78rem">· {html.escape(it.get("fuente") or "")}</span></li>' for it in uh)
+               + "</ul>")
     # II
     s2 = ""
     for b in cont["internacional"]:
