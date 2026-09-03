@@ -765,7 +765,10 @@ def render(D, N, A, cont, meta, tz):
   document.querySelectorAll('[data-tip]').forEach(function(el){{el.addEventListener('mousemove',function(e){{show(e,el);}}); el.addEventListener('mouseleave',function(){{tip.classList.remove('on');}}); el.addEventListener('touchstart',function(e){{show(e,el);}},{{passive:true}}); el.addEventListener('touchend',function(){{setTimeout(function(){{tip.classList.remove('on');}},1200);}});}});
   // revelar al hacer scroll + arrancar animaciones de graficos
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.querySelectorAll('section, .delta, .quickindex').forEach(function(s){{s.classList.add('reveal');}});
+  // solo se 'esconden' para animar los bloques que estan BAJO el primer pantallazo; lo visible nunca se oculta
+  var vh=window.innerHeight||800; document.querySelectorAll('section, .delta, .quickindex').forEach(function(s){{if(s.getBoundingClientRect().top>vh*0.9) s.classList.add('reveal');}});
+  function revealByScroll(){{var lim=(window.innerHeight||800)+ (window.scrollY||0) - 40; document.querySelectorAll('.reveal:not(.in)').forEach(function(s){{if(s.getBoundingClientRect().top+(window.scrollY||0)<lim) s.classList.add('in');}});}}
+  window.addEventListener('scroll',revealByScroll,{{passive:true}}); window.addEventListener('resize',revealByScroll);
   if('IntersectionObserver' in window && !reduce){{var ro=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{e.target.classList.add('in'); ro.unobserve(e.target);}}}});}},{{rootMargin:'0px 0px -8% 0px'}}); document.querySelectorAll('.reveal').forEach(function(s){{ro.observe(s);}});
     var go=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{e.target.classList.add('go'); go.unobserve(e.target);}}}});}},{{threshold:.35}}); document.querySelectorAll('.chart-card').forEach(function(c){{go.observe(c);}});}}
   else{{document.querySelectorAll('.reveal').forEach(function(s){{s.classList.add('in');}}); document.querySelectorAll('.chart-card').forEach(function(c){{c.classList.add('go');}});}}
