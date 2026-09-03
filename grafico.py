@@ -58,8 +58,8 @@ def usdclp_12m(serie, precio_hoy=None, etiqueta_hoy=""):
   <text x="34" y="108" font-size="9" fill="#C97A45" font-weight="700" text-anchor="end" font-family="-apple-system,Segoe UI,sans-serif">0</text>
   <rect x="296" y="108" width="50" height="12" fill="#1A1D21"/>
   <text x="346" y="117" font-size="7.5" fill="#C97A45" font-weight="700" text-anchor="end" font-family="-apple-system,Segoe UI,sans-serif">prom. ${_m(prom)}</text>
-  <polygon points="{pts} {xs[-1]:.1f},190 {xs[0]:.1f},190" fill="url(#usdArea)"/>
-  <polyline points="{pts}" fill="none" stroke="#C97A45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon class="fill" points="{pts} {xs[-1]:.1f},190 {xs[0]:.1f},190" fill="url(#usdArea)"/>
+  <polyline class="draw" points="{pts}" fill="none" stroke="#C97A45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   {extra}{labs}{hits}
 </svg>'''
     # resumen en palabras (para el parrafo bajo el grafico)
@@ -132,9 +132,9 @@ def velas_dolar(a, n=60):
         pts = " ".join(f"{x(i+off):.1f},{y(p):.1f}" for i, p in enumerate(serie))
         return f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="{w}" stroke-linejoin="round" stroke-linecap="round"/>'
     if s50:
-        out.append(poly(s50, "#7FA8B8", 1.3))
+        out.append(poly(s50, "#7FA8B8", 1.3).replace("<polyline ", '<polyline class="draw d3" ', 1))
     if s20:
-        out.append(poly(s20, "#C97A45", 1.5))
+        out.append(poly(s20, "#C97A45", 1.5).replace("<polyline ", '<polyline class="draw d2" ', 1))
     # barras de rango del dia (max-min), coloreadas por si el cierre subio o
     # bajo vs el dia anterior (las velas FX de Yahoo traen apertura = cierre,
     # asi que un cuerpo de vela no aporta). Encima, la linea de cierres con
@@ -147,8 +147,8 @@ def velas_dolar(a, n=60):
         out.append(f'<rect x="{xx-bw/2:.1f}" y="{y(c["h"]):.1f}" width="{bw:.1f}" height="{max(1.0, y(c["l"])-y(c["h"])):.1f}" rx="1" fill="{col}" opacity="0.38"/>')
     pts = " ".join(f"{x(i):.1f},{y(c['c']):.1f}" for i, c in enumerate(v))
     out.append('<defs><linearGradient id="clpArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDEDEA" stop-opacity="0.16"/><stop offset="100%" stop-color="#EDEDEA" stop-opacity="0"/></linearGradient></defs>')
-    out.append(f'<polygon points="{pts} {x(len(v)-1):.1f},{Y1} {x(0):.1f},{Y1}" fill="url(#clpArea)"/>')
-    out.append(f'<polyline points="{pts}" fill="none" stroke="#EDEDEA" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>')
+    out.append(f'<polygon class="fill" points="{pts} {x(len(v)-1):.1f},{Y1} {x(0):.1f},{Y1}" fill="url(#clpArea)"/>')
+    out.append(f'<polyline class="draw" points="{pts}" fill="none" stroke="#EDEDEA" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>')
     # precio actual: linea + punto
     p = a["price"]
     out.append(f'<line x1="{X0}" y1="{y(p):.1f}" x2="{X1}" y2="{y(p):.1f}" stroke="#EDEDEA" stroke-width="0.7" stroke-dasharray="2,3" opacity="0.55"/>')
@@ -235,7 +235,7 @@ def barras_bolsa(b, max_n=30):
         x0, x1 = (mid, x(a["chg"])) if a["chg"] >= 0 else (x(a["chg"]), mid)
         out.append(f'<text x="{LX-6}" y="{yy+7.5}" font-size="7" fill="#D3D4D2" text-anchor="end" {F}>{a["nombre"]}</text>')
         tip = f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · {a['sector']}".replace(",", "X").replace(".", ",").replace("X", ".")
-        out.append(f'<rect x="{x0:.1f}" y="{yy+1.5}" width="{max(0.8, x1-x0):.1f}" height="{RH-3}" rx="1.5" fill="{col}" opacity="0.85"/>')
+        out.append(f'<rect class="bar {"pos" if a["chg"] >= 0 else "neg"}" x="{x0:.1f}" y="{yy+1.5}" width="{max(0.8, x1-x0):.1f}" height="{RH-3}" rx="1.5" fill="{col}" opacity="0.85"/>')
         out.append(f'<rect class="hit" x="{LX-110}" y="{yy}" width="{RX-LX+120}" height="{RH}" data-tip="{tip}"/>')
         tx = (x1 + 3) if a["chg"] >= 0 else (x0 - 3)
         anc = "start" if a["chg"] >= 0 else "end"

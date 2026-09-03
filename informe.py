@@ -48,6 +48,37 @@ CSS = r"""
   :focus-visible{outline:2px solid var(--copper);outline-offset:2px;border-radius:3px;}
   .num,.tv,.card .v,.commod-card .cv,tbody td:not(:first-child),.lvl .row b,.delta .d-row b{font-family:var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
 
+  /* ---- movimiento ---- */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(95,178,131,.55);}70%{box-shadow:0 0 0 7px rgba(95,178,131,0);}100%{box-shadow:0 0 0 0 rgba(95,178,131,0);}}
+  @keyframes glow{0%,100%{opacity:.55;}50%{opacity:.9;}}
+  header .anim{opacity:0;animation:fadeUp .7s cubic-bezier(.2,.8,.2,1) forwards;}
+  header .anim:nth-child(1){animation-delay:.05s} header .anim:nth-child(2){animation-delay:.18s} header .anim:nth-child(3){animation-delay:.3s}
+  header .anim:nth-child(4){animation-delay:.45s} header .anim:nth-child(5){animation-delay:.55s} header .anim:nth-child(6){animation-delay:.65s}
+  header::before{content:"";position:absolute;top:-120px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(208,138,85,.22) 0%,rgba(208,138,85,0) 65%);animation:glow 9s ease-in-out infinite;pointer-events:none;}
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1);}
+  .reveal.in{opacity:1;transform:none;}
+  .card,.commod-card,.chart-card{transition:border-color .2s,transform .25s,box-shadow .25s;}
+  .card:hover,.commod-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+  svg .draw{stroke-dasharray:2000;stroke-dashoffset:2000;}
+  .go svg .draw{animation:drawLine 1.6s cubic-bezier(.4,0,.2,1) forwards;}
+  .go svg .draw.d2{animation-delay:.25s} .go svg .draw.d3{animation-delay:.45s}
+  @keyframes drawLine{to{stroke-dashoffset:0;}}
+  svg .bar{transform:scaleX(0);transform-box:fill-box;}
+  svg .bar.pos{transform-origin:left center;} svg .bar.neg{transform-origin:right center;}
+  .go svg .bar{animation:growBar .7s cubic-bezier(.2,.8,.2,1) forwards;}
+  @keyframes growBar{to{transform:scaleX(1);}}
+  svg .fill{opacity:0;transition:opacity 1s ease .9s;} .go svg .fill{opacity:1;}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:.66rem;color:var(--soft);text-transform:uppercase;letter-spacing:.08em;}
+  .live i{width:7px;height:7px;border-radius:50%;background:var(--soft2);display:inline-block;}
+  .live.on i{background:var(--green);animation:pulse 2s infinite;}
+  .spark{width:44px;height:14px;vertical-align:middle;margin-left:4px;}
+  .range-btns{display:flex;gap:4px;position:absolute;top:12px;right:12px;}
+  .range-btns button{appearance:none;border:1px solid var(--line);background:var(--bg2);color:var(--soft);font:inherit;font-size:.62rem;padding:3px 8px;border-radius:999px;cursor:pointer;}
+  .range-btns button.on{color:var(--copper);border-color:var(--copper);background:var(--coppersoft);}
+  .rango{display:none;} .rango.on{display:block;}
+  @media (prefers-reduced-motion:reduce){header .anim{animation:none;opacity:1;} .reveal{opacity:1;transform:none;transition:none;} svg .draw{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important;} svg .bar{transform:none;animation:none!important;} svg .fill{opacity:1;} header::before{animation:none;} .live.on i{animation:none;}}
+
   /* barra de progreso de lectura */
   #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--copper),var(--ice));z-index:100;transition:width .1s linear;}
 
@@ -88,6 +119,7 @@ CSS = r"""
   .sb-nav a{flex:0 0 auto;font-size:.68rem;color:var(--soft);text-decoration:none;padding:4px 10px;border-radius:999px;border:1px solid transparent;white-space:nowrap;transition:all .2s;}
   .sb-nav a.active{color:var(--copper);border-color:var(--copper);background:var(--coppersoft);}
   .sb-nav a:hover{color:var(--ink);}
+  .sb-nav a.fold{margin-left:auto;border-color:var(--line);}
 
   .quickindex{padding:18px 22px;border-bottom:1px solid var(--line);}
   .quickindex .qi-label{text-transform:uppercase;letter-spacing:.16em;font-size:.6rem;color:var(--copper);font-weight:600;margin-bottom:12px;}
@@ -197,6 +229,9 @@ CSS = r"""
     body{padding:0 0 24px;}
     .ticker-track{animation:none;}
     .sticky-bar,#progress,#totop,.tip{display:none!important;}
+    .reveal,header .anim{opacity:1!important;transform:none!important;animation:none!important;}
+    svg .draw{stroke-dasharray:none!important;stroke-dashoffset:0!important;animation:none!important;} svg .bar{transform:none!important;animation:none!important;} svg .fill{opacity:1!important;}
+    .range-btns{display:none;} .rango{display:none;} .rango[data-rango="60"]{display:block;} header::before{display:none;}
     section.collapsed .sec-body{display:block;} .tab-panel{display:block;} .tabs{display:none;}
     .chart-card,.commod-card,.card,.table-wrap,li,.callout{break-inside:avoid;}
     h2,h3{break-after:avoid;}
@@ -251,15 +286,16 @@ def _ticker(D, tz, b=None):
     if u:
         ahora = dt.datetime.now(tz)
         abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
+        sp_u = _spark(u.get("candles"))
         if abierto:
-            items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
+            items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2) + sp_u))
         else:
             # mercado chileno cerrado: se muestra el ULTIMO CIERRE (como el original)
             cierres = DS.cierres_diarios(u["candles"], 2, tz)
             if len(cierres) == 2:
                 c1, c0 = cierres[-1], cierres[-2]
                 dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][c1["fecha"].weekday()]
-                items.append((f"Dólar (cierre {dia})", "$" + fmt(c1["c"]), _flecha((c1["c"] - c0["c"]) / c0["c"] * 100, 2)))
+                items.append((f"Dólar (cierre {dia})", "$" + fmt(c1["c"]), _flecha((c1["c"] - c0["c"]) / c0["c"] * 100, 2) + sp_u))
             else:
                 items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2)))
     if items_ipsa:
@@ -271,9 +307,9 @@ def _ticker(D, tz, b=None):
     if ch.get("uf"):
         items.append(("UF", "$" + fmt(ch["uf"]["valor"]), '<span class="flat">—</span>'))
     if cu:
-        items.append(("Cobre", "US$" + fmt(cu["price"]), _flecha(cu["chg"])))
+        items.append(("Cobre", "US$" + fmt(cu["price"]), _flecha(cu["chg"]) + _spark(cu.get("candles"))))
     if br:
-        items.append(("Petróleo (Brent)", "US$" + fmt(br["price"]), _flecha(br["chg"])))
+        items.append(("Petróleo (Brent)", "US$" + fmt(br["price"]), _flecha(br["chg"]) + _spark(br.get("candles"))))
     h = "".join(f'<div class="ticker-item"><span class="tk">{k}</span><span class="tv">{v}</span><span class="td">{d}</span></div>'
                 for k, v, d in items)
     return h + h   # duplicado para que la cinta sea continua
@@ -435,13 +471,14 @@ def _sec_dolar(a, cont, tz):
     <div class="card"><div class="k">Volatilidad</div><div class="v">{fmt(a["atr_pct"], 1) if a.get("atr_pct") else "n/d"}% / día</div><div class="d flat">rango típico ≈ ${fmt(a["price"] * (a["atr_pct"] or 0) / 100, 0)}</div></div>
     <div class="card"><div class="k">Valor justo</div><div class="v">{vj}</div>{vj_d}</div>
   </div>'''
-    chart = grafico.velas_dolar(a)
+    charts = {n: grafico.velas_dolar(a, n=n) for n in (30, 60, 120)}
     chart_html = f'''<div class="chart-card">
-    <div class="chart-title">USD/CLP — últimos 60 días</div>
-    <div class="chart-meta">Velas diarias · medias móviles 20 y 50 · soportes y resistencias donde el precio giró varias veces · retroceso de Fibonacci más cercano</div>
-    {chart}
+    <div class="chart-title">USD/CLP — últimos <span id="rango-lab">60</span> días</div>
+    <div class="range-btns">{"".join(f'<button data-rango="{n}" class="{"on" if n == 60 else ""}">{n} d</button>' for n in (30, 60, 120))}</div>
+    <div class="chart-meta">Cierres diarios y rango de cada día · medias móviles 20 y 50 · soportes y resistencias donde el precio giró varias veces · retroceso de Fibonacci más cercano</div>
+    {"".join(f'<div class="rango {"on" if n == 60 else ""}" data-rango="{n}">{charts[n]}</div>' for n in (30, 60, 120))}
     {grafico.LEYENDA_VELAS}
-  </div>''' if chart else ""
+  </div>''' if charts[60] else ""
     # motores
     filas = []
     emojis = {"cobre": "🧲", "dxy": "💵", "brl": "🇧🇷", "bono": "🏦"}
@@ -540,7 +577,7 @@ def _sec_cripto(k, cont, tz):
         chart = (f'<div class="chart-card"><div class="chart-title">Bitcoin — 30 días</div><div class="chart-meta">Cierres diarios · {fmt(lo + pad, 0)} – {fmt(hi - pad, 0)} US$</div>'
                  f'<svg viewBox="0 0 360 86" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
                  f'<defs><linearGradient id="btcA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="{col}" stop-opacity="0.3"/><stop offset="100%" stop-color="{col}" stop-opacity="0"/></linearGradient></defs>'
-                 f'<polygon points="{pts} {xs[-1]:.1f},{Y1} {xs[0]:.1f},{Y1}" fill="url(#btcA)"/><polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round"/>'
+                 f'<polygon class="fill" points="{pts} {xs[-1]:.1f},{Y1} {xs[0]:.1f},{Y1}" fill="url(#btcA)"/><polyline class="draw" points="{pts}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round"/>'
                  f'<circle cx="{xs[-1]:.1f}" cy="{ys[-1]:.1f}" r="2.6" fill="#fff" stroke="#15171A"/></svg></div>')
     lectura = f"<p>{cont.get('cripto', '')}</p>" if cont.get("cripto") else ""
     nota = '<p style="font-size:.76rem;color:var(--soft);">Fuentes: Yahoo Finance (precios), alternative.me (miedo y codicia), CoinGecko (dominancia y capitalización). Cambios de 7 y 30 días sobre cierres diarios.</p>'
@@ -582,6 +619,23 @@ _COLORES = {
     "#23272C": "var(--grid)", "#1F2328": "var(--andes)", "#1B2A21": "var(--greenbg)", "#16191D": "var(--plot)",
     "#1C1F23": "var(--bg2)", "#fff": "var(--white)",
 }
+
+
+def _mercado_abierto(ahora):
+    feriado = ahora.strftime("%m-%d") in C.FERIADOS_CL or ahora.strftime("%Y-%m-%d") in C.FERIADOS_CL
+    return ahora.weekday() < 5 and not feriado and (9 <= ahora.hour < 17 or (ahora.hour == 9 and ahora.minute >= 30))
+
+
+def _spark(candles, n=12, ancho=44, alto=14):
+    """Mini-grafico de los ultimos n cierres (para el ticker)."""
+    cs = [c["c"] for c in (candles or [])[-n:]]
+    if len(cs) < 3:
+        return ""
+    lo, hi = min(cs), max(cs)
+    rng = (hi - lo) or 1
+    pts = " ".join(f"{ancho * k / (len(cs) - 1):.1f},{alto - 1 - (v - lo) / rng * (alto - 2):.1f}" for k, v in enumerate(cs))
+    col = "var(--green)" if cs[-1] >= cs[0] else "var(--red)"
+    return f'<svg class="spark" viewBox="0 0 {ancho} {alto}"><polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.3" stroke-linejoin="round"/></svg>'
 
 
 def _tokenizar(html_txt):
@@ -650,19 +704,19 @@ def render(D, N, A, cont, meta, tz):
 <body>
 <main>
 <header>
-  <div class="logo-slot"><div class="wordmark"><span class="a">A</span><span class="rest">Mercados</span></div><div class="rule"></div></div>
-  <div class="eyebrow">{C.EYEBROW}</div>
-  <div class="headline-frame"><div class="headline-label">El Titular AM</div><h1>{cont['titular']}</h1></div>
-  <div class="sub">Lectura de 5 min · Mercados globales y locales</div>
-  <div class="range"><span>{C.CIUDAD}, {fecha_larga}</span><span>{("Texto de las " + meta["texto_de"] + " · datos actualizados a las ") if meta.get("texto_de") else "Datos hasta las "}{ahora:%H:%M} hrs</span></div>
-  {ANDES}
+  <div class="logo-slot anim"><div class="wordmark"><span class="a">A</span><span class="rest">Mercados</span></div><div class="rule"></div></div>
+  <div class="eyebrow anim">{C.EYEBROW}</div>
+  <div class="headline-frame anim"><div class="headline-label">El Titular AM</div><h1>{cont['titular']}</h1></div>
+  <div class="sub anim">Lectura de 5 min · Mercados globales y locales · <span class="live {'on' if _mercado_abierto(ahora) else ''}"><i></i>{'Bolsa de Santiago abierta' if _mercado_abierto(ahora) else 'mercado local cerrado'}</span></div>
+  <div class="range anim"><span>{C.CIUDAD}, {fecha_larga}</span><span>{("Texto de las " + meta["texto_de"] + " · datos actualizados a las ") if meta.get("texto_de") else "Datos hasta las "}{ahora:%H:%M} hrs <span id="hace" data-ts="{int(ahora.timestamp())}"></span></span></div>
+  <div class="anim">{ANDES}</div>
 </header>
 <div class="sticky-bar">
   <div class="sb-top"><span class="wm"><span class="a">A</span><span class="rest">Mercados</span></span><span class="sdate">{fecha_corta}</span>
     <button class="btn" id="theme" aria-label="Cambiar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Claro</span></button>
     <button class="btn" id="share" aria-label="Compartir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M7 8l5-5 5 5"/></svg><span>Compartir</span></button>
   </div>
-  <nav class="sb-nav">{nav}</nav>
+  <nav class="sb-nav">{nav}<a href="#" id="fold" class="fold">Plegar todo</a></nav>
 </div>
 <div class="ticker-wrap"><div class="ticker-track">{_ticker(D, tz, meta.get("bolsa"))}</div></div>
 <div class="quickindex"><div class="qi-label">En este informe</div><div class="qi-row">{qi}</div></div>
@@ -697,7 +751,7 @@ def render(D, N, A, cont, meta, tz):
     function tg(){{h.parentNode.classList.toggle('collapsed');}}
     h.addEventListener('click',tg); h.addEventListener('keydown',function(e){{if(e.key==='Enter'||e.key===' '){{e.preventDefault();tg();}}}});}});
   // navegacion con seccion activa
-  var links=[].slice.call(document.querySelectorAll('.sb-nav a')); var secs=links.map(function(a){{return document.querySelector(a.getAttribute('href'));}});
+  var links=[].slice.call(document.querySelectorAll('.sb-nav a')).filter(function(a){{return (a.getAttribute('href')||'').length>1;}}); var secs=links.map(function(a){{return document.querySelector(a.getAttribute('href'));}});
   if('IntersectionObserver' in window){{var cur=null; var io=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{cur=e.target.id;}}}}); links.forEach(function(a){{var on=a.getAttribute('href')==='#'+cur; a.classList.toggle('active',on); if(on) a.scrollIntoView({{block:'nearest',inline:'center',behavior:'smooth'}});}});}},{{rootMargin:'-40% 0px -55% 0px'}}); secs.forEach(function(s){{if(s) io.observe(s);}});}}
   // tablas ordenables
   function num(s){{s=s.replace(/[^\d,\-−.]/g,'').replace('−','-'); if(/,\d{{1,2}}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,''); var v=parseFloat(s); return isNaN(v)?null:v;}}
@@ -709,6 +763,25 @@ def render(D, N, A, cont, meta, tz):
   var tip=document.getElementById('tip');
   function show(e,el){{tip.innerHTML=el.getAttribute('data-tip'); tip.classList.add('on'); var x=e.touches?e.touches[0].clientX:e.clientX, y=e.touches?e.touches[0].clientY:e.clientY; tip.style.left=Math.max(70,Math.min(window.innerWidth-70,x))+'px'; tip.style.top=y+'px';}}
   document.querySelectorAll('[data-tip]').forEach(function(el){{el.addEventListener('mousemove',function(e){{show(e,el);}}); el.addEventListener('mouseleave',function(){{tip.classList.remove('on');}}); el.addEventListener('touchstart',function(e){{show(e,el);}},{{passive:true}}); el.addEventListener('touchend',function(){{setTimeout(function(){{tip.classList.remove('on');}},1200);}});}});
+  // revelar al hacer scroll + arrancar animaciones de graficos
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('section, .delta, .quickindex').forEach(function(s){{s.classList.add('reveal');}});
+  if('IntersectionObserver' in window && !reduce){{var ro=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{e.target.classList.add('in'); ro.unobserve(e.target);}}}});}},{{rootMargin:'0px 0px -8% 0px'}}); document.querySelectorAll('.reveal').forEach(function(s){{ro.observe(s);}});
+    var go=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{e.target.classList.add('go'); go.unobserve(e.target);}}}});}},{{threshold:.35}}); document.querySelectorAll('.chart-card').forEach(function(c){{go.observe(c);}});}}
+  else{{document.querySelectorAll('.reveal').forEach(function(s){{s.classList.add('in');}}); document.querySelectorAll('.chart-card').forEach(function(c){{c.classList.add('go');}});}}
+  setTimeout(function(){{document.querySelectorAll('.reveal:not(.in)').forEach(function(s){{s.classList.add('in');}});}},2500);
+  // cifras que cuentan hasta su valor (tarjetas)
+  function countUp(el){{var txt=el.textContent; var m=txt.match(/-?[0-9][0-9.,]*/); if(!m) return; var raw=m[0]; var dec=(raw.match(/,(\d+)$/)||[,''])[1].length; var v=parseFloat(raw.replace(/\./g,'').replace(',','.')); if(isNaN(v)||Math.abs(v)>1e9) return;
+    var t0=null, dur=900; function fmt(x){{var s=x.toFixed(dec); var p=s.split('.'); p[0]=p[0].replace(/\B(?=(\d{{3}})+(?!\d))/g,'.'); return p.join(',');}}
+    function step(ts){{if(!t0) t0=ts; var k=Math.min(1,(ts-t0)/dur); k=1-Math.pow(1-k,3); el.textContent=txt.replace(raw,fmt(v*k)); if(k<1) requestAnimationFrame(step); else el.textContent=txt;}}
+    requestAnimationFrame(step);}}
+  if(!reduce && 'IntersectionObserver' in window){{var co=new IntersectionObserver(function(es){{es.forEach(function(e){{if(e.isIntersecting){{countUp(e.target); co.unobserve(e.target);}}}});}},{{threshold:.6}}); document.querySelectorAll('.kpi .card .v, .stripe .card .v, .commod-card .cv').forEach(function(el){{if(!el.querySelector('span,svg')) co.observe(el);}});}}
+  // "hace X min"
+  var hc=document.getElementById('hace'); if(hc){{var ts=parseInt(hc.getAttribute('data-ts'),10)*1000; function upd(){{var m=Math.round((Date.now()-ts)/60000); hc.textContent = m<1?'· recién':(m<60?'· hace '+m+' min':(m<1440?'· hace '+Math.round(m/60)+' h':'· hace '+Math.round(m/1440)+' d'));}} upd(); setInterval(upd,30000);}}
+  // plegar / desplegar todo
+  var fd=document.getElementById('fold'); if(fd){{fd.addEventListener('click',function(e){{e.preventDefault(); var secs=document.querySelectorAll('section'); var plegar=fd.textContent.indexOf('Plegar')===0; secs.forEach(function(s){{s.classList.toggle('collapsed',plegar);}}); fd.textContent=plegar?'Desplegar todo':'Plegar todo';}});}}
+  // selector de rango del grafico del dolar
+  document.querySelectorAll('.range-btns button').forEach(function(b){{b.addEventListener('click',function(){{var card=b.closest('.chart-card'); card.querySelectorAll('.range-btns button').forEach(function(x){{x.classList.remove('on');}}); b.classList.add('on'); var r=b.getAttribute('data-rango'); card.querySelectorAll('.rango').forEach(function(d){{d.classList.toggle('on',d.getAttribute('data-rango')===r);}}); var lab=document.getElementById('rango-lab'); if(lab) lab.textContent=r; card.classList.remove('go'); void card.offsetWidth; card.classList.add('go');}});}});
   // animar el marcador de presion
   var gm=document.querySelector('.g-mark'); if(gm){{var L=gm.style.left; gm.style.left='50%'; setTimeout(function(){{gm.style.left=L;}},80);}}
 }})();
