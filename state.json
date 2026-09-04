@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-09-03",
+ "ultimo_envio": "2026-09-04",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-09-03": [
@@ -23,16 +23,16 @@
   "texto": "IPSA sigue desafiando a la incertidumbre y sube a niveles de 11.500 puntos al inicio de la tarde junto con bolsas de la regi\u00f3n"
  },
  "foto_informe": {
-  "fecha": "2026-09-03",
-  "usdclp": 932.27,
-  "cobre": 6.644,
-  "brent": 96.13,
-  "oro": 4518.2,
-  "spx": 7714.86,
-  "btc": 78925.57,
-  "vix": 15.01,
-  "us10y": 4.748,
-  "ipsa": 11634.679963843197
+  "fecha": "2026-09-04",
+  "usdclp": 930.46,
+  "cobre": 6.649,
+  "brent": 94.87,
+  "oro": 4520.6,
+  "spx": 7747.71,
+  "btc": 81159.55,
+  "vix": 14.17,
+  "us10y": 4.762,
+  "ipsa": 11433.045396403411
  },
  "dolar_cierre": {
   "fecha": "2026-09-03",
