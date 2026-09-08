@@ -30,6 +30,10 @@ def _pick(env_name, local):
 TELEGRAM_TOKEN = _pick("TELEGRAM_TOKEN", _LOCAL_TOKEN)
 CHAT_ID = int(_pick("CHAT_ID", _LOCAL_CHAT or 0))
 ANTHROPIC_API_KEY = _pick("ANTHROPIC_API_KEY", _LOCAL_AI)
+# Base de Datos Estadisticos del Banco Central (renta fija chilena). La API
+# usa un TOKEN que se genera dentro de la cuenta gratuita de
+# https://si3.bcentral.cl/Siete -> BCCH_TOKEN en secrets_local.py o Secret en GitHub.
+BCCH_TOKEN = _pick("BCCH_TOKEN", getattr(_sl, "BCCH_TOKEN", "") if "_sl" in globals() else "")
 
 # ---------------------------------------------------------------------
 #  Identidad del informe
@@ -153,6 +157,20 @@ IPSA_ACCIONES = [
     ("SONDA.SN",      "Sonda",            "Tecnología",     0.5),
     ("SALFACORP.SN",  "Salfacorp",        "Construcción",   0.3),
 ]
+
+# ---------------------------------------------------------------------
+#  Renta fija chilena (Banco Central, series diarias). Clave interna ->
+#  (codigo de serie BCCh, nombre, moneda). Los codigos se descubren con
+#  `python3 amercados.py rentafija buscar` y se pegan aqui.
+# ---------------------------------------------------------------------
+RENTA_FIJA = {
+    # "bcp2":  ("F019...", "BCP 2 años",  "CLP"),
+    # "bcp5":  ("F019...", "BCP 5 años",  "CLP"),
+    # "bcp10": ("F019...", "BCP 10 años", "CLP"),
+    # "bcu2":  ("F019...", "BCU 2 años",  "UF"),
+    # "bcu5":  ("F019...", "BCU 5 años",  "UF"),
+    # "bcu10": ("F019...", "BCU 10 años", "UF"),
+}
 
 # ---------------------------------------------------------------------
 #  Seccion "Dolar en profundidad" (mismo cerebro que dolar-bot).

@@ -470,9 +470,36 @@ def _sec_santiago(b, tz):
     <div class="card"><div class="k">Amplitud</div><div class="v"><span class="up">{b["n_alzas"]} ▲</span> · <span class="down">{b["n_bajas"]} ▼</span></div><div class="d flat">alzas · bajas</div></div>
     <div class="card"><div class="k">Sectores</div><div class="v" style="font-size:.8rem">{(lider[0] + " " + pct(lider[1])) if lider else "n/d"}</div><div class="d flat">{("rezagado: " + rezag[0] + " " + pct(rezag[1])) if rezag else ""}</div></div>
   </div>'''
+    pq_map = b.get("por_que") or {}
     def fila(a):
-        return (f"<tr><td>{html.escape(a['nombre'])} <span style=\"color:var(--soft);font-size:.68rem\">{html.escape(a['sector'])}</span></td>"
+        pq = pq_map.get(a["nombre"])
+        extra = ""
+        if pq:
+            extra = (f'<div style="font-size:.72rem;color:var(--soft);white-space:normal;max-width:360px;margin-top:3px;line-height:1.35">'
+                     f'<span style="color:var(--copper);font-family:var(--f-mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.06em">prensa</span> '
+                     f'<a href="{html.escape(pq.get("link") or "")}" style="color:var(--text)">{html.escape(pq["titulo"])}</a> · {html.escape(pq.get("fuente") or "")}{(" · " + pq["hace"]) if pq.get("hace") else ""}</div>')
+        return (f"<tr><td style=\"white-space:normal\">{html.escape(a['nombre'])} <span style=\"color:var(--soft);font-size:.68rem\">{html.escape(a['sector'])}</span>{extra}</td>"
                 f"<td>${fmt(a['price'], 2 if a['price'] < 1000 else 0)}</td><td>{_flecha(a['chg'], 2)}</td></tr>")
+    # montos transados
+    montos = ""
+    if b.get("monto_total"):
+        import bolsa as _BL
+        vs = ""
+        if b.get("monto_vs_prom") is not None:
+            vs = f'<div class="d {_cls(b["monto_vs_prom"])}">{_flecha(b["monto_vs_prom"], 0)} vs. prom. {min(20, b["n_hist"])} sesiones</div>'
+        else:
+            vs = f'<div class="d flat">promedio disponible tras {max(0, 3 - b.get("n_hist", 0))} sesiones más</div>'
+        top = b["mas_transadas"][0] if b["mas_transadas"] else None
+        conc = sum(a["monto"] for a in b["mas_transadas"][:3]) / b["monto_total"] * 100 if b["monto_total"] else 0
+        montos = ('<h3>Montos transados</h3><div class="kpi">'
+                  f'<div class="card"><div class="k">Monto {"en curso" if abierto else "de la sesión"}</div><div class="v">${_BL._mm(b["monto_total"])} mm</div>{vs}</div>'
+                  + (f'<div class="card"><div class="k">Más transada</div><div class="v" style="font-size:.85rem">{html.escape(top["nombre"])}</div><div class="d flat">${_BL._mm(top["monto"])} mm · {top["monto"] / b["monto_total"] * 100:.0f}% del total</div></div>' if top else "")
+                  + f'<div class="card"><div class="k">Concentración</div><div class="v">{conc:.0f}%</div><div class="d flat">las 3 más transadas</div></div>'
+                  + f'<div class="card"><div class="k">Acciones</div><div class="v">{b["n"]}</div><div class="d flat">con volumen informado</div></div></div>'
+                  + '<div class="table-wrap"><table><thead><tr><th>Más transadas</th><th>Monto (mm)</th><th>% del total</th><th>Var.</th></tr></thead><tbody>'
+                  + "".join(f"<tr><td>{html.escape(a['nombre'])} <span style=\"color:var(--soft);font-size:.68rem\">{html.escape(a['sector'])}</span></td><td>${_BL._mm(a['monto'])}</td><td>{a['monto'] / b['monto_total'] * 100:.1f}%</td><td>{_flecha(a['chg'], 2)}</td></tr>".replace(".1f}%", ".1f}%") for a in b["mas_transadas"])
+                  + "</tbody></table></div>"
+                  + '<p style="font-size:.76rem;color:var(--soft);">Monto = acciones transadas × precio, según el volumen que informa Yahoo Finance para cada papel; puede diferir del total oficial de la Bolsa (que incluye todos los instrumentos). "mm" = miles de millones de pesos.</p>')
     t_alzas = ('<div class="table-wrap"><table><thead><tr><th>Mayores alzas</th><th>Precio</th><th>Var.</th></tr></thead><tbody>'
                + "".join(fila(a) for a in b["alzas"]) + ("<tr><td colspan=3>Ninguna acción al alza</td></tr>" if not b["alzas"] else "") + "</tbody></table></div>")
     t_bajas = ('<div class="table-wrap"><table><thead><tr><th>Mayores bajas</th><th>Precio</th><th>Var.</th></tr></thead><tbody>'
@@ -484,7 +511,10 @@ def _sec_santiago(b, tz):
     <div class="chart-meta">Las {b["n"]} acciones más grandes, de mayor alza a mayor baja · fuente Yahoo Finance (cierre anterior oficial de cada papel)</div>{chart}</div>''' if chart else ""
     nota = ("<p style=\"font-size:.76rem;color:var(--soft);\">El IPSA estimado se calcula con las acciones de arriba y pesos aproximados; el índice oficial "
             "lo publica la Bolsa de Santiago y puede diferir en décimas. Cuando la prensa informa el cierre exacto, el nivel se ancla a esa cifra.</p>")
-    return cards + _heatmap(b) + chart_html + t_alzas + t_bajas + sect + nota
+    resumen = f"<h3>Resumen de la sesión</h3><p>{html.escape(b['resumen'])}</p>" if b.get("resumen") else ""
+    nota_pq = ('<p style="font-size:.76rem;color:var(--soft);">La línea "prensa" bajo cada acción es el titular más reciente sobre la empresa en la prensa chilena: una pista del motivo, no una explicación verificada.</p>'
+               if pq_map else "")
+    return cards + resumen + _heatmap(b) + chart_html + montos + t_alzas + t_bajas + nota_pq + sect + nota
 
 
 def _sec_bolsa(D, tz):
@@ -846,7 +876,7 @@ def _heatmap(b):
             bg = f"rgba(184,67,58,{0.25 + 0.6 * k:.2f})"
         basis = max(9.5, a["peso"] / total * 100 * 2.2)
         small = "s" if basis < 13 else ""
-        tip = f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · peso aprox. {a['peso']:.1f}%".replace(",", "X").replace(".", ",").replace("X", ".")
+        tip = (f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · peso aprox. {a['peso']:.1f}%" + (f" · transado ${a['monto']/1e9:,.1f} mm" if a.get("monto") else "")).replace(",", "X").replace(".", ",").replace("X", ".")
         tiles.append(f'<div class="tile {small}" style="flex:1 1 {basis:.1f}%;background:{bg}" data-tip="{html.escape(tip)}"><span class="tn">{html.escape(a["nombre"])}</span><span class="tc">{pct(a["chg"])}</span></div>')
     return ('<div class="chart-card"><div class="chart-title">Mapa de calor — Bolsa de Santiago</div>'
             '<div class="chart-meta">Tamaño = peso aproximado en el IPSA · color = variación de la sesión</div>'

@@ -51,6 +51,7 @@ jobs:
           git add state.json 2>/dev/null || true
           git add noticias_vistas.json 2>/dev/null || true
           git add edicion_hoy.json 2>/dev/null || true
+          git add volumen_hist.json 2>/dev/null || true
           git add docs 2>/dev/null || true
           git commit -m "informe $(date -u +%Y-%m-%d)" || { echo "sin cambios"; exit 0; }
           git push || (git pull --rebase --autostash && git push) || echo "no se pudo subir, la proxima corrida reintenta"

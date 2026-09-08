@@ -237,9 +237,13 @@ def barras_bolsa(b, max_n=30):
         tip = f"{a['nombre']} · ${a['price']:,.2f} · {a['chg']:+.2f}% · {a['sector']}".replace(",", "X").replace(".", ",").replace("X", ".")
         out.append(f'<rect class="bar {"pos" if a["chg"] >= 0 else "neg"}" x="{x0:.1f}" y="{yy+1.5}" width="{max(0.8, x1-x0):.1f}" height="{RH-3}" rx="1.5" fill="{col}" opacity="0.85"/>')
         out.append(f'<rect class="hit" x="{LX-110}" y="{yy}" width="{RX-LX+120}" height="{RH}" data-tip="{tip}"/>')
-        tx = (x1 + 3) if a["chg"] >= 0 else (x0 - 3)
-        anc = "start" if a["chg"] >= 0 else "end"
         lab = f"{a['chg']:+.1f}%".replace(".", ",")
-        out.append(f'<text x="{tx:.1f}" y="{yy+7.5}" font-size="6.5" fill="{col}" text-anchor="{anc}" font-weight="600" {F}>{lab}</text>')
+        if a["chg"] >= 0:
+            tx, anc, colt = x1 + 3, "start", col
+        elif x0 - 3 - 4.2 * len(lab) > LX:      # cabe a la izquierda de la barra
+            tx, anc, colt = x0 - 3, "end", col
+        else:                                    # barra muy larga: etiqueta dentro, en claro
+            tx, anc, colt = x0 + 3, "start", "#F1EFEA"
+        out.append(f'<text x="{tx:.1f}" y="{yy+7.5}" font-size="6.5" fill="{colt}" text-anchor="{anc}" font-weight="600" {F}>{lab}</text>')
     return (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
             + "".join(out) + "</svg>")

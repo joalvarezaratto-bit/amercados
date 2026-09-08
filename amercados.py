@@ -88,7 +88,7 @@ def construir(sin_ia=False, verbose=True):
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80])
         meta["dolar"] = None
-    meta["bolsa"] = _bolsa_santiago(verbose)
+    meta["bolsa"] = _bolsa_santiago(verbose, con_por_que=True)
     meta["cripto"] = _cripto(verbose)
     meta["delta"] = _delta_informe(D, meta, ahora, guardar=True)
     if verbose:
@@ -285,7 +285,10 @@ def actualizar(gate=False):
     except Exception as e:
         print("   (aviso) análisis del dólar falló:", str(e)[:80]); meta["dolar"] = None
     _guardar_cierre_dolar(D, ahora)
-    meta["bolsa"] = _bolsa_santiago(True)
+    meta["bolsa"] = _bolsa_santiago(True, con_por_que=True)
+    if meta["bolsa"] and ahora.hour >= 17 and meta["bolsa"].get("sesion") == ahora.date():
+        import bolsa as _BLa
+        _BLa.guardar_monto_sesion(meta["bolsa"])
     meta["cripto"] = _cripto(True)
     meta["delta"] = _delta_informe(D, meta, ahora, guardar=False)
     cont = ed["cont"]
@@ -344,12 +347,17 @@ def a_pdf(ruta_html):
     return None
 
 
-def _bolsa_santiago(verbose=True):
+def _bolsa_santiago(verbose=True, con_por_que=False):
     """Acciones del IPSA + resumen (alzas/bajas/sectores/IPSA estimado)."""
     try:
         import bolsa
         acc = bolsa.recolectar()
         b = bolsa.analizar(acc, TZ, cierre_prensa=_state().get("ipsa_cierre"))
+        if b and con_por_que:
+            b["por_que"] = bolsa.por_que(b["alzas"][:3] + b["bajas"][:3], max_n=6)
+            b["resumen"] = bolsa.resumen_mercado(b)
+            if verbose:
+                print(f"   bolsa: 'por qué' encontrado para {len(b['por_que'])} de 6 acciones")
         if verbose and b:
             print(f"   bolsa: IPSA est. {b['var']:+.2f}% · {b['n_alzas']}▲ {b['n_bajas']}▼")
         return b
@@ -461,6 +469,10 @@ def flash(gate=False):
     _guardar_cierre_ipsa(D, ahora)
     _guardar_cierre_dolar(D, ahora)
     b = _bolsa_santiago(True)
+    if b and ahora.hour >= 17 and b.get("sesion") == ahora.date():
+        import bolsa as _BLm
+        if _BLm.guardar_monto_sesion(b):
+            print("   monto de la sesión guardado en volumen_hist.json")
     print("   noticias...")
     N = noticias.recolectar()
     _avisar_salud(D, N, ahora, "flash")
@@ -474,6 +486,11 @@ def flash(gate=False):
                  + f" · {b['n_alzas']}▲ {b['n_bajas']}▼"
                  + (f" · sube {b['alzas'][0]['nombre']} {_pct(b['alzas'][0]['chg'])}" if b["alzas"] else "")
                  + (f" · cae {b['bajas'][0]['nombre']} {_pct(b['bajas'][0]['chg'])}" if b["bajas"] else ""))
+        if b.get("monto_total"):
+            import bolsa as _BLf
+            L.append(f"💰 Transado: <b>${_BLf._mm(b['monto_total'])} mm</b>"
+                     + (f" ({_pct(b['monto_vs_prom'], 0)} vs. prom.)" if b.get("monto_vs_prom") is not None else "")
+                     + (f" · lidera {b['mas_transadas'][0]['nombre']}" if b.get("mas_transadas") else ""))
     L.append("")
     if nuevas:
         L.append("<b>Titulares nuevos</b>")
@@ -544,6 +561,21 @@ def main():
         health()
     elif cmd == "actualizar":
         actualizar(gate="--gate" in args)
+    elif cmd == "rentafija":
+        import rentafija as RF
+        if len(args) > 1 and args[1] == "buscar":
+            texto = args[2] if len(args) > 2 else "BCP"
+            res = RF.buscar(texto)
+            print(f"{len(res)} series con '{texto}':")
+            for cod, nombre, ult in res[:60]:
+                print(f"  {cod:28s} {nombre[:80]}  (últ. {ult})")
+        else:
+            rf = RF.recolectar()
+            an = RF.analizar(rf, (__import__('datos').yahoo(C.YAHOO['us10y'][0]) or {}).get('price'))
+            for f in RF.frases(an):
+                print("-", f)
+            if not rf:
+                print("(sin datos: revisa BCCH_TOKEN y RENTA_FIJA en config.py)")
     elif cmd == "pdf":
         p = a_pdf(os.path.join(SALIDA, "ultimo.html"))
         print("PDF:", p or "no se pudo generar")
