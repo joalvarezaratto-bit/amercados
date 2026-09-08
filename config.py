@@ -45,20 +45,24 @@ TIMEZONE = "America/Santiago"
 #  corre cada hora y el bot decide si ya es la hora (robusto al horario
 #  de verano). Se recuerda en state.json que ya se envio hoy.
 # ---------------------------------------------------------------------
-REPORT_HORA = 7          # 7 = entre 07:00 y 08:59 hora Chile (ventana de 2 h)
+REPORT_HORA = 7          # desde las 07:00 hora Chile
+REPORT_HORA_FIN = 12     # si por atraso de GitHub no salió antes, se envía igual hasta las 11:59
+# (GitHub Actions ejecuta el cron "cuando puede": a veces con horas de atraso.
+#  Por eso el bot NO exige una hora exacta: manda en la primera corrida que
+#  caiga dentro de la ventana y anota que ya lo hizo.)
 SOLO_DIAS_HABILES = True
 
 # "Flash" intradía: mensaje corto a Telegram (precios del momento + titulares
 # NUEVOS desde el último envío), sin volver a redactar el informe. Se manda a
 # estas horas de Chile (durante esa hora, una vez). Lista vacía = sin flashes.
-FLASH_HORAS = [13, 18]
+FLASH_HORAS = [13, 18]   # cada flash tiene una ventana de 2 horas (13:00-14:59, 18:00-19:59)
 FLASH_TOP = 4            # máximo de titulares nuevos por flash
 
 # "Edición viva": a estas horas de Chile se REGENERA la pagina web (GitHub
 # Pages) con datos frescos (ticker, dolar, seccion del dolar, commodities,
 # bolsas, datos publicados), conservando el TEXTO editorial de la mañana.
 # No cuesta IA ni manda nada a Telegram; el link siempre queda al dia.
-ACTUALIZAR_HORAS = [10, 13, 16, 19]
+ACTUALIZAR_HORAS = [10, 13, 16, 19]   # ventana de 2 h cada una
 
 FERIADOS_CL = {
     "01-01", "05-01", "05-21", "06-20", "06-29", "07-16", "08-15",

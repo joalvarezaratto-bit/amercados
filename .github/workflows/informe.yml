@@ -1,6 +1,7 @@
 name: AMercados - informe matinal + flashes
 
-# Corre cada hora (a los :05 UTC). El bot decide con `--gate` si en Chile ya
+# Corre cada 20 minutos (GitHub Actions ejecuta el cron con atrasos de hasta
+# horas; con mas corridas y ventanas de 2 h en el bot nunca se pierde un envio). El bot decide con `--gate` si en Chile ya
 # son las 07:xx de un dia habil (informe completo), las 13:xx / 18:xx (flash
 # corto con precios + titulares nuevos) o las 10/13/16/19 (edicion viva: se
 # regenera la pagina con datos frescos y el texto de la mañana). Asi el horario de verano nunca lo
@@ -9,7 +10,7 @@ name: AMercados - informe matinal + flashes
 
 on:
   schedule:
-    - cron: "5 * * * *"
+    - cron: "7,27,47 * * * *"   # cada 20 min: GitHub atrasa el cron, asi hay mas oportunidades
   workflow_dispatch:      # boton "Run workflow" para mandarlo a mano (sin gate)
 
 permissions:

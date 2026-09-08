@@ -56,8 +56,9 @@ def _toca_enviar(ahora):
     """True si estamos en la ventana horaria y no se envio hoy."""
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
-    if not (C.REPORT_HORA <= ahora.hour < C.REPORT_HORA + 2):
-        return False, f"fuera de la ventana {C.REPORT_HORA:02d}:00-{C.REPORT_HORA+1:02d}:59"
+    fin = getattr(C, "REPORT_HORA_FIN", C.REPORT_HORA + 2)
+    if not (C.REPORT_HORA <= ahora.hour < fin):
+        return False, f"fuera de la ventana {C.REPORT_HORA:02d}:00-{fin-1:02d}:59"
     if _state().get("ultimo_envio") == ahora.strftime("%Y-%m-%d"):
         return False, "ya se envió hoy"
     return True, ""
@@ -206,7 +207,7 @@ def health():
         return
     s = _state()
     hoy = ahora.strftime("%Y-%m-%d")
-    if ahora.hour >= C.REPORT_HORA + 2 and s.get("ultimo_envio") != hoy and s.get("aviso_faltante") != hoy:
+    if ahora.hour >= getattr(C, "REPORT_HORA_FIN", C.REPORT_HORA + 2) and s.get("ultimo_envio") != hoy and s.get("aviso_faltante") != hoy:
         T.send(f"⚠️ <b>{C.NOMBRE}</b>: hoy {ahora:%d-%m} NO se envió el informe de la mañana "
                f"(revisa GitHub Actions o corre <code>python3 amercados.py send</code>).")
         s["aviso_faltante"] = hoy
@@ -260,14 +261,14 @@ def actualizar(gate=False):
     editorial guardado del informe de la mañana (sin IA, sin Telegram)."""
     import datos, agenda, informe, dolar
     ahora = dt.datetime.now(TZ)
+    slot = None
     if gate:
         if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
             print(f"[{ahora:%Y-%m-%d %H:%M} Chile] actualizar: fin de semana o feriado."); return
-        if ahora.hour not in C.ACTUALIZAR_HORAS:
-            print(f"[{ahora:%Y-%m-%d %H:%M} Chile] actualizar: no es hora ({', '.join(f'{h:02d}:00' for h in C.ACTUALIZAR_HORAS)})."); return
         hechas = _state().get("actualizaciones", {}).get(ahora.strftime("%Y-%m-%d"), [])
-        if ahora.hour in hechas:
-            print("actualizar: esta hora ya se hizo."); return
+        slot = _slot(ahora, C.ACTUALIZAR_HORAS, hechas)
+        if slot is None:
+            print(f"[{ahora:%Y-%m-%d %H:%M} Chile] actualizar: nada pendiente en esta hora ({', '.join(f'{h:02d}:00' for h in C.ACTUALIZAR_HORAS)})."); return
     try:
         ed = json.load(open(EDICION))
     except Exception:
@@ -305,7 +306,7 @@ def actualizar(gate=False):
     ruta = _escribir_salidas(html_txt, ahora)
     s = _state()
     s.setdefault("actualizaciones", {})
-    s["actualizaciones"] = {ahora.strftime("%Y-%m-%d"): sorted(set(s["actualizaciones"].get(ahora.strftime("%Y-%m-%d"), []) + [ahora.hour]))}
+    s["actualizaciones"] = {ahora.strftime("%Y-%m-%d"): sorted(set(s["actualizaciones"].get(ahora.strftime("%Y-%m-%d"), []) + [slot if slot is not None else ahora.hour]))}
     _save_state(s)
     print(f"   página actualizada: {ruta} (texto de las {ed.get('hora')})")
     return ruta
@@ -403,14 +404,24 @@ def _delta_informe(D, meta, ahora, guardar):
     return out
 
 
+def _slot(ahora, horas, hechos, ventana=2):
+    """Devuelve la hora-slot pendiente que cubre `ahora` (ventana de `ventana`
+    horas desde cada hora programada) o None. Así una corrida atrasada de
+    GitHub igual dispara el envío, y no se repite dentro del mismo slot."""
+    for h in sorted(horas):
+        if h <= ahora.hour < h + ventana and h not in hechos:
+            return h
+    return None
+
+
 def _toca_flash(ahora):
     if C.SOLO_DIAS_HABILES and not _es_habil(ahora):
         return False, "fin de semana o feriado"
-    if ahora.hour not in C.FLASH_HORAS:
-        return False, f"no es hora de flash ({', '.join(f'{h:02d}:00' for h in C.FLASH_HORAS)})"
     hechos = _state().get("flashes", {}).get(ahora.strftime("%Y-%m-%d"), [])
-    if ahora.hour in hechos:
-        return False, "este flash ya se envió"
+    slot = _slot(ahora, C.FLASH_HORAS, hechos)
+    if slot is None:
+        en_ventana = any(h <= ahora.hour < h + 2 for h in C.FLASH_HORAS)
+        return False, ("este flash ya se envió" if en_ventana else f"no es hora de flash ({', '.join(f'{h:02d}:00' for h in C.FLASH_HORAS)})")
     return True, ""
 
 
@@ -486,7 +497,9 @@ def flash(gate=False):
         noticias.marcar_vistas(nuevas)
         s = _state()
         s.setdefault("flashes", {})
-        s["flashes"] = {ahora.strftime("%Y-%m-%d"): sorted(set(s["flashes"].get(ahora.strftime("%Y-%m-%d"), []) + [ahora.hour]))}
+        hechos = s["flashes"].get(ahora.strftime("%Y-%m-%d"), [])
+        slot = _slot(ahora, C.FLASH_HORAS, hechos)
+        s["flashes"] = {ahora.strftime("%Y-%m-%d"): sorted(set(hechos + [slot if slot is not None else ahora.hour]))}
         _save_state(s)
         print(f"   flash enviado ✅ ({len(nuevas)} titulares nuevos)")
     return ok
