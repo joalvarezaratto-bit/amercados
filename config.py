@@ -82,8 +82,8 @@ FERIADOS_CL = {
 #  seccion se redacta como el ejemplo (parrafos, titular del dia, riesgos).
 #  Costo aprox. por informe: Opus 5 ~US$0,10-0,15; Sonnet 5 ~US$0,05.
 # ---------------------------------------------------------------------
-USE_AI = False   # cambiar a True cuando la cuenta de Anthropic tenga saldo
-AI_MODEL = "claude-opus-5"        # alternativa mas barata: "claude-sonnet-5"
+USE_AI = True    # el bot comprueba cada mañana si hay saldo; si no, redacta por reglas sin costo
+AI_MODEL = "claude-sonnet-5"      # ~US$0,05 por informe; "claude-opus-5" escribe mejor (~US$0,15)
 AI_EFFORT = "medium"              # low | medium | high  (mas alto = mas caro y lento)
 
 # ---------------------------------------------------------------------

@@ -96,8 +96,9 @@ def construir(sin_ia=False, verbose=True):
     N = noticias.recolectar()
     if verbose:
         print("   " + " · ".join(f"{s}:{len(v)}" for s, v in N.items()))
-    # leer el cuerpo de las notas mas relevantes (solo sirve si hay IA que lo lea)
-    if C.USE_AI and C.ANTHROPIC_API_KEY and C.LEER_NOTAS > 0:
+    # leer el cuerpo de las notas mas relevantes (solo si la IA esta disponible de verdad)
+    import redactor as _RD
+    if C.LEER_NOTAS > 0 and _RD.ia_disponible(meta):
         import lector
         orden = N.get("relevante", []) + [x for s, its in N.items() if s != "relevante" for x in its[:3]]
         vistos, lista = set(), []

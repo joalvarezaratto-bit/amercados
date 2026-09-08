@@ -452,8 +452,9 @@ def _sec_commod(D, tz):
     return grid + tabla
 
 
-def _sec_santiago(b, tz):
+def _sec_santiago(b, tz, cont=None):
     """Bloque 'Bolsa de Santiago' con las acciones del IPSA."""
+    cont = cont or {}
     if not b:
         return ""
     ses = _fecha_corta(b["sesion"]) if b.get("sesion") else ""
@@ -511,7 +512,9 @@ def _sec_santiago(b, tz):
     <div class="chart-meta">Las {b["n"]} acciones más grandes, de mayor alza a mayor baja · fuente Yahoo Finance (cierre anterior oficial de cada papel)</div>{chart}</div>''' if chart else ""
     nota = ("<p style=\"font-size:.76rem;color:var(--soft);\">El IPSA estimado se calcula con las acciones de arriba y pesos aproximados; el índice oficial "
             "lo publica la Bolsa de Santiago y puede diferir en décimas. Cuando la prensa informa el cierre exacto, el nivel se ancla a esa cifra.</p>")
-    resumen = f"<h3>Resumen de la sesión</h3><p>{html.escape(b['resumen'])}</p>" if b.get("resumen") else ""
+    # con IA, el resumen de la sesion es el parrafo redactado (cont["bolsa"], ya mostrado arriba);
+    # sin IA, el resumen por reglas
+    resumen = f"<h3>Resumen de la sesión</h3><p>{html.escape(b['resumen'])}</p>" if (b.get("resumen") and cont.get("modo") != "ia") else ""
     nota_pq = ('<p style="font-size:.76rem;color:var(--soft);">La línea "prensa" bajo cada acción es el titular más reciente sobre la empresa en la prensa chilena: una pista del motivo, no una explicación verificada.</p>'
                if pq_map else "")
     return cards + resumen + _heatmap(b) + chart_html + montos + t_alzas + t_bajas + nota_pq + sect + nota
@@ -927,7 +930,7 @@ def render(D, N, A, cont, meta, tz):
     s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>" + _titulares(cont, "commodities", "Commodities")
     s9 = (f"<p>{cont['bolsa']}</p>"
           + '<div class="tabs"><button class="on" data-tab="scl">Bolsa de Santiago</button><button data-tab="glob">Bolsas globales</button></div>'
-          + '<div class="tab-panel on" data-tab="scl">' + (_sec_santiago(meta.get("bolsa"), tz) or "<p>Sin datos de la Bolsa de Santiago hoy.</p>") + "</div>"
+          + '<div class="tab-panel on" data-tab="scl">' + (_sec_santiago(meta.get("bolsa"), tz, cont) or "<p>Sin datos de la Bolsa de Santiago hoy.</p>") + "</div>"
           + '<div class="tab-panel" data-tab="glob">' + _sec_bolsa(D, tz) + "</div>"
           + _titulares(cont, "bolsa", "Bolsa"))
     s10 = _sec_cripto(meta.get("cripto"), cont, tz)

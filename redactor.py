@@ -180,7 +180,7 @@ Responde ÚNICAMENTE con un JSON válido con esta forma exacta (sin texto antes 
  "cripto": "2-3 frases sobre bitcoin y el mercado cripto con las cifras entregadas (precio, sentimiento, dominancia); sin predecir",
  "dolar": "lectura de 3-5 frases del ANÁLISIS CUANTITATIVO DEL DÓLAR: qué motor manda hoy, si el dólar está caro o barato vs. su valor justo, qué niveles vigilar y qué dice el contexto estratégico (carry, régimen, valoración). Describe el presente; no predigas.",
  "commodities": "párrafo sobre petróleo, cobre, oro y plata con las cifras y titulares entregados",
- "bolsa": "párrafo sobre IPSA (según prensa), Wall Street y bolsas globales con las cifras entregadas",
+ "bolsa": "RESUMEN DE LA SESIÓN de la Bolsa de Santiago en 4-6 frases: dirección del IPSA estimado y amplitud, sectores fuertes y débiles, las acciones que más subieron y bajaron y, cuando haya un titular de negocio entregado sobre esa empresa, el posible motivo citándolo con cautela ('según prensa'); montos transados y quién lideró; cierra con una frase sobre Wall Street y bolsas globales. Sin inventar motivos que no estén en los datos.",
  "riesgos": ["<strong>Riesgo:</strong> por qué importa hoy", ...]   // 4-5 ítems, incluye eventos de la agenda
 }"""
 
@@ -253,6 +253,32 @@ def _extraer_json(texto):
         if i >= 0 and j > i:
             return json.loads(texto[i:j + 1])
     raise ValueError("la IA no devolvió JSON")
+
+
+def ia_disponible(meta=None):
+    """Consulta minima (5 tokens) para saber si la API responde y hay saldo.
+    Si falla por saldo/permiso, activa el breaker 6 h. Evita leer notas en vano."""
+    if not C.USE_AI or not C.ANTHROPIC_API_KEY or _breaker_open():
+        if meta is not None:
+            meta["ia_motivo"] = ("USE_AI = False en config.py" if not C.USE_AI else
+                                 ("sin ANTHROPIC_API_KEY" if not C.ANTHROPIC_API_KEY else
+                                  "IA apagada temporalmente tras un error (saldo/permiso)"))
+        return False
+    try:
+        import anthropic
+        cl = anthropic.Anthropic(api_key=C.ANTHROPIC_API_KEY)
+        cl.messages.create(model="claude-haiku-4-5", max_tokens=5, messages=[{"role": "user", "content": "ok"}])
+        return True
+    except Exception as e:
+        msg = getattr(e, "message", str(e))
+        if "credit balance" in msg:
+            _trip_breaker("saldo")
+            if meta is not None:
+                meta["ia_motivo"] = "la cuenta de Anthropic no tiene saldo (cargar créditos en console.anthropic.com)"
+        else:
+            if meta is not None:
+                meta["ia_motivo"] = f"IA no disponible: {msg[:100]}"
+        return False
 
 
 def redactar_ia(D, N, A, meta, hechos, tz):
