@@ -112,9 +112,9 @@ CSS = r"""
   .tape-item.tick.up .tv{color:#B9F0CF;text-shadow:0 0 10px rgba(95,178,131,.8);} .tape-item.tick.down .tv{color:#FFC1B7;text-shadow:0 0 10px rgba(208,106,92,.8);}
   .tape-item .spark polyline{stroke:#5FB283;} .tape-item .spark polyline.neg{stroke:#D06A5C;}
   /* relojes de mercados */
-  .markets{display:flex;gap:6px;overflow-x:auto;padding:8px 22px;background:var(--bg2);border-bottom:1px solid var(--line);scrollbar-width:none;}
-  .markets::-webkit-scrollbar{display:none;}
-  .mk{flex:0 0 auto;display:flex;align-items:center;gap:7px;font-size:.66rem;color:var(--soft);padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-family:var(--f-mono);}
+  .markets{display:flex;flex-wrap:wrap;gap:6px;padding:8px 22px;background:var(--bg2);border-bottom:1px solid var(--line);}
+  .mk{flex:1 1 calc(50% - 6px);min-width:0;display:flex;align-items:center;gap:6px;font-size:.64rem;color:var(--soft);padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-family:var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  @media (min-width:560px){.mk{flex:1 1 calc(33.33% - 6px);}}
   .mk b{color:var(--ink);font-weight:600;} .mk i{width:7px;height:7px;border-radius:50%;background:var(--soft2);display:inline-block;}
   .mk.open i{background:var(--green);animation:pulse 2s infinite;} .mk .st{color:var(--soft);}
   .mk.open .st{color:var(--green);}
@@ -859,7 +859,8 @@ def _tape(D, tz, b=None, k=None):
 def _relojes():
     """Relojes de mercados (se actualizan por JS): Santiago, Nueva York, Londres, Tokio."""
     mk = [("scl", "Santiago", "America/Santiago", "09:30", "16:00"), ("nyc", "Nueva York", "America/New_York", "09:30", "16:00"),
-          ("lon", "Londres", "Europe/London", "08:00", "16:30"), ("tyo", "Tokio", "Asia/Tokyo", "09:00", "15:30")]
+          ("lon", "Londres", "Europe/London", "08:00", "16:30"), ("tyo", "Tokio", "Asia/Tokyo", "09:00", "15:30"),
+          ("hkg", "Hong Kong", "Asia/Hong_Kong", "09:30", "16:00"), ("sha", "Shanghái", "Asia/Shanghai", "09:30", "15:00")]
     return '<div class="markets">' + "".join(
         f'<span class="mk" data-tz="{tz_}" data-open="{o}" data-close="{c}"><i></i><b>{n}</b> <span class="hh">--:--</span> <span class="st">…</span></span>'
         for _, n, tz_, o, c in mk) + "</div>"
