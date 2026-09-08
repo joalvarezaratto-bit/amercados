@@ -327,6 +327,16 @@ def _tag_de(sec):
             "cambio": "Dólar", "commodities": "Commodities", "bolsa": "Bolsa"}.get(sec, "Hoy")
 
 
+def _items(N, sec, n):
+    """Titulares de una seccion como dicts simples (serializables) para las tarjetas."""
+    import noticias as _NT
+    out = []
+    for it in (N.get(sec) or [])[:n]:
+        out.append({"titulo": it["titulo"], "fuente": it.get("fuente") or "", "link": it.get("link") or "",
+                    "hace": _NT.hace(it) if hasattr(_NT, "hace") else "", "horas": it.get("horas")})
+    return out
+
+
 def redactar_reglas(D, N, A, meta, hechos, tz):
     n = C.NOTICIAS_MOSTRAR_SIN_IA
     rel = N.get("relevante") or []
@@ -345,9 +355,8 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     def lista(sec):
         return [_li_titular(it) for it in (N.get(sec) or [])[:n]] or ["Sin titulares relevantes en las últimas 24 horas."]
 
-    internacional = [{"h3": "Titulares del día", "parrafos": []}]
-    internacional[0]["items"] = lista("internacional")
-    tasas_txt = [h for h in hechos if any(x in h for x in ("Tesoro", "TPM", "DXY"))]
+    internacional = []   # sin IA: las noticias van como tarjetas (cont["titulares"])
+    tasas_txt = []       # los datos de tasas se muestran como tarjetas + curva
     cambio_txt = " ".join(h for h in hechos if h.startswith(("Dólar", "Variación semanal", "Euro:", "Real")))
     comm_txt = " ".join(h for h in hechos if h.startswith(("Petróleo", "Cobre", "Oro", "Plata")))
     bolsa_txt = " ".join(h for h in hechos if h.startswith(("IPSA", "ETF", "S&P", "Futuro", "Euro Stoxx", "Nikkei", "Hang", "Shanghái", "VIX", "Bitcoin")))
@@ -401,12 +410,13 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
         "cripto": lectura_cripto,
         "relevante": relevante,
         "internacional": internacional,
-        "chile": lista("chile"),
-        "geopolitica": lista("geopolitica"),
-        "tasas": tasas_txt + ["Titulares: " + " · ".join(_li_titular(it) for it in (N.get("tasas") or [])[:4])] if N.get("tasas") else tasas_txt,
-        "cambio": cambio_txt + (" Titulares: " + " · ".join(_li_titular(it) for it in (N.get("cambio") or [])[:3]) if N.get("cambio") else ""),
-        "commodities": comm_txt + (" Titulares: " + " · ".join(_li_titular(it) for it in (N.get("commodities") or [])[:3]) if N.get("commodities") else ""),
-        "bolsa": bolsa_txt + (" Titulares: " + " · ".join(_li_titular(it) for it in (N.get("bolsa") or [])[:4]) if N.get("bolsa") else ""),
+        "chile": [],
+        "geopolitica": [],
+        "tasas": tasas_txt,
+        "cambio": cambio_txt,
+        "commodities": comm_txt,
+        "bolsa": bolsa_txt,
+        "titulares": {sec: _items(N, sec, n) for sec in ("internacional", "chile", "geopolitica", "tasas", "cambio", "commodities", "bolsa")},
         "riesgos": riesgos or ["Sin riesgos destacados detectados por reglas."],
     }
 
@@ -450,6 +460,7 @@ def redactar(D, N, A, meta, tz):
         for k in ("cambio", "commodities", "bolsa", "dolar", "cripto"):
             cont[k] = _sanear(cont[k])
         cont["modo"] = "ia"
+        cont["titulares"] = {sec: _items(N, sec, 4) for sec in ("internacional", "chile", "geopolitica", "tasas", "cambio", "commodities", "bolsa")}
         return cont
     cont = redactar_reglas(D, N, A, meta, hechos, tz)
     cont["modo"] = "reglas"

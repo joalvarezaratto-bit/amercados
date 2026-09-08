@@ -5,6 +5,7 @@ capitalizacion total (CoinGecko, gratis, sin key).
 
 HONESTO: precios y sentimiento del momento; no es recomendacion.
 """
+import re
 import time
 import datetime as dt
 import requests

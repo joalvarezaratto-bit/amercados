@@ -246,6 +246,26 @@ CSS = r"""
   .strat .card{min-width:0;}
   .strat .card .v{font-size:.92rem;} .strat .card .d{font-size:.74rem;color:var(--text2);margin-top:5px;line-height:1.45;}
 
+  /* tarjetas de noticias */
+  .news{display:grid;gap:8px;margin:8px 0 6px;}
+  .nw{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;transition:border-color .2s,transform .2s;}
+  .nw:hover{border-color:var(--copper);transform:translateX(2px);}
+  .nw a{font-size:.9rem;color:var(--ink);text-decoration:none;line-height:1.42;border:0;}
+  .nw .m{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.62rem;color:var(--soft);font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em;}
+  .nw .m .tg{color:var(--copper);} .nw .m .hc{color:var(--soft2);}
+  /* agenda por dia */
+  .ag-day{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--line);}
+  .ag-day b{font-family:var(--f-display);font-size:.95rem;color:var(--ink);font-weight:500;}
+  .ag-day span{font-size:.64rem;color:var(--soft);font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em;}
+  .ag-row{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.86rem;color:var(--text);}
+  .ag-row:last-child{border-bottom:none;}
+  .ag-row .h{font-family:var(--f-mono);font-size:.74rem;color:var(--soft);}
+  .ag-row .e{line-height:1.35;} .ag-row .e small{display:block;color:var(--soft);font-size:.7rem;font-family:var(--f-mono);margin-top:2px;}
+  .pill{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap;}
+  .pill.alto{background:var(--redbg);color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);}
+  .pill.medio{background:var(--coppersoft);color:var(--copper);border-color:color-mix(in srgb,var(--copper) 40%,transparent);}
+  .pill.bajo{background:var(--bg2);color:var(--soft);border-color:var(--line);}
+  td.t{font-family:var(--f-body);}
   /* pestañas */
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 8px;}
   .tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--soft);font:inherit;font-size:.78rem;font-weight:600;padding:8px 12px;cursor:pointer;margin-bottom:-1px;}
@@ -535,7 +555,7 @@ def _sec_dolar(a, cont, tz):
         rel = "inversa" if k == "cobre" else "directa"
         unidad = "%" if k == "bono" else ""
         filas.append(f"<tr><td>{emojis[k]} {a['nombres'][k]} <span style=\"color:var(--soft);font-size:.7rem\">({rel})</span></td>"
-                     f"<td>{fmt(d['price'], 2)}{unidad}</td><td>{_flecha(d['chg'], 2)}</td><td>{ctxt}{barra}</td><td>{emp}</td></tr>")
+                     f"<td>{fmt(d['price'], 2)}{unidad}</td><td>{_flecha(d['chg'], 2)}</td><td>{ctxt}{barra}</td><td class=\"t\">{emp}</td></tr>")
     motores = ("<h3>Motores del peso</h3>"
                '<div class="table-wrap"><table><thead><tr><th>Motor</th><th>Último</th><th>Var. día</th><th>Correlación 40 d</th><th>Empuje hoy</th></tr></thead><tbody>'
                + "".join(filas) + "</tbody></table></div>"
@@ -629,15 +649,101 @@ def _franja_delta(meta):
     return f'<div class="delta"><div class="d-lab">Desde el informe del {dl["desde"]}</div><div class="d-row">{items}</div></div>'
 
 
+def _cards(items, tag):
+    if not items:
+        return ""
+    out = []
+    for it in items:
+        t = html.escape(it.get("titulo", ""))
+        link = html.escape(it.get("link") or "")
+        titulo = f'<a href="{link}">{t}</a>' if link else f"<span>{t}</span>"
+        meta = f'<span class="tg">{html.escape(tag)}</span>'
+        if it.get("fuente"):
+            meta += f'<span>{html.escape(it["fuente"])}</span>'
+        if it.get("hace"):
+            meta += f'<span class="hc">{html.escape(it["hace"])}</span>'
+        out.append(f'<div class="nw">{titulo}<div class="m">{meta}</div></div>')
+    return '<div class="news">' + "".join(out) + "</div>"
+
+
+def _titulares(cont, sec, tag, h3="Titulares"):
+    items = (cont.get("titulares") or {}).get(sec) or []
+    if not items:
+        return ""
+    return (f"<h3>{h3}</h3>" if h3 else "") + _cards(items, tag)
+
+
+def _sec_tasas(D, cont, tz):
+    """Tarjetas de tasas + mini curva de rendimientos EE.UU. + parrafos/titulares."""
+    Y = D.get("yahoo") or {}
+    ch = D.get("chile") or {}
+    cards = []
+    tpm = (ch.get("tpm") or {}).get("valor")
+    if tpm is not None:
+        cards.append(f'<div class="card"><div class="k">TPM Chile</div><div class="v">{fmt(tpm, 2)}%</div><div class="d flat">Banco Central</div></div>')
+    def pb(q):
+        if not q or q.get("prev") is None:
+            return '<div class="d flat">—</div>'
+        d = (q["price"] - q["prev"]) * 100
+        cls = _cls(d)
+        return f'<div class="d {cls}">{"▲" if cls == "up" else ("▼" if cls == "down" else "—")} {abs(d):.0f} pb</div>'
+    for key, nombre, sub in (("irx", "Tasa corta EE.UU.", "T-bill 3 meses"), ("us5y", "Tesoro 5 años", "EE.UU."), ("us10y", "Tesoro 10 años", "EE.UU."), ("us30y", "Tesoro 30 años", "EE.UU.")):
+        q = Y.get(key)
+        if q and q.get("price") is not None:
+            cards.append(f'<div class="card"><div class="k">{nombre}</div><div class="v">{fmt(q["price"], 2)}%</div>{pb(q)}<div class="d flat">{sub}</div></div>')
+    dxy = Y.get("dxy")
+    if dxy:
+        cards.append(f'<div class="card"><div class="k">Dollar index</div><div class="v">{fmt(dxy["price"], 2)}</div><div class="d {_cls(dxy["chg"])}">{_flecha(dxy["chg"])}</div></div>')
+    kpi = '<div class="stripe">' + "".join(cards) + "</div>" if cards else ""
+    # curva: 3m, 5a, 10a, 30a
+    pts = [(lab, Y.get(key)) for lab, key in (("3m", "irx"), ("5a", "us5y"), ("10a", "us10y"), ("30a", "us30y"))]
+    pts = [(lab, q["price"]) for lab, q in pts if q and q.get("price") is not None]
+    curva = ""
+    if len(pts) >= 3:
+        lo, hi = min(v for _, v in pts), max(v for _, v in pts)
+        pad = (hi - lo) * 0.25 or 0.2
+        lo, hi = lo - pad, hi + pad
+        X0, X1, Y0, Y1 = 30, 340, 14, 78
+        xs = [X0 + (X1 - X0) * j / (len(pts) - 1) for j in range(len(pts))]
+        ys = [Y1 - (v - lo) / (hi - lo) * (Y1 - Y0) for _, v in pts]
+        poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
+        F = 'font-family="-apple-system,Segoe UI,sans-serif"'
+        dots = "".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" fill="#C97A45" stroke="#15171A" stroke-width="1"/>'
+                       f'<text x="{x:.1f}" y="{y-8:.1f}" font-size="8" fill="#EDEDEA" text-anchor="middle" font-weight="600" {F}>{fmt(v, 2)}%</text>'
+                       f'<text x="{x:.1f}" y="{Y1+12}" font-size="7.5" fill="#8B9099" text-anchor="middle" {F}>{lab}</text>'
+                       for (lab, v), x, y in zip(pts, xs, ys))
+        inv = pts[-1][1] < pts[0][1]
+        curva = (f'<div class="chart-card"><div class="chart-title">Curva de rendimientos EE.UU.</div>'
+                 f'<div class="chart-meta">Tasas del Tesoro por plazo · {"invertida (corto plazo paga más que largo)" if inv else "pendiente positiva (largo plazo paga más)"}</div>'
+                 f'<svg viewBox="0 0 370 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">'
+                 f'<polyline class="draw" points="{poly}" fill="none" stroke="#C97A45" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>{dots}</svg></div>')
+    parr = "".join(f"<p>{p}</p>" for p in (cont.get("tasas") or []))
+    return kpi + curva + parr + _titulares(cont, "tasas", "Tasas")
+
+
 def _sec_agenda(A, meta):
-    filas = "".join(
-        f"<tr><td>{_fecha_corta(e['fecha'])}{(' ' + e['hora']) if e['hora'] else ''}</td><td>{html.escape(e['titulo'])}"
-        f"{(' · esperado ' + html.escape(e['forecast'])) if e.get('forecast') else ''}</td><td>{e['impacto']}</td></tr>"
-        for e in A[:14])
-    if not filas:
-        filas = "<tr><td colspan=3>Sin eventos relevantes en los próximos días.</td></tr>"
-    out = ('<div class="table-wrap"><table><thead><tr><th>Fecha (hora Chile)</th><th>Evento</th><th>Impacto</th></tr></thead><tbody>'
-           + filas + "</tbody></table></div>")
+    ahora = meta["ahora"]
+    hoy = ahora.date()
+    dias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+    out = ""
+    if not A:
+        out = "<p>Sin eventos relevantes en los próximos días.</p>"
+    grupos = {}
+    for e in A[:20]:
+        grupos.setdefault(e["fecha"], []).append(e)
+    for f in sorted(grupos):
+        delta = (f - hoy).days
+        cuando = "hoy" if delta == 0 else ("mañana" if delta == 1 else f"en {delta} días")
+        out += f'<div class="ag-day"><b>{dias[f.weekday()].capitalize()} {_fecha_corta(f)}</b><span>{cuando}</span></div>'
+        for e in grupos[f]:
+            imp = (e.get("impacto") or "Medio").lower()
+            extra = []
+            if e.get("forecast"):
+                extra.append("esperado " + html.escape(e["forecast"]))
+            if e.get("previous"):
+                extra.append("previo " + html.escape(e["previous"]))
+            out += (f'<div class="ag-row"><span class="h">{e["hora"] or "—"}</span><span class="e">{html.escape(e["titulo"])}'
+                    f'{("<small>" + " · ".join(extra) + "</small>") if extra else ""}</span><span class="pill {imp}">{e["impacto"]}</span></div>')
     res = meta.get("resultados") or []
     if res:
         out += "<h3>Datos ya publicados hoy</h3><ul class=\"plain\">" + "".join(
@@ -782,16 +888,18 @@ def render(D, N, A, cont, meta, tz):
         s2 += "".join(f"<p>{p}</p>" for p in b.get("parrafos") or [])
         if b.get("items"):
             s2 += _li(b["items"])
-    s3 = _li(cont["chile"])
-    s4 = _li(cont["geopolitica"])
-    s5 = "".join(f"<p>{p}</p>" for p in cont["tasas"]) or "<p>Sin novedades relevantes en tasas hoy.</p>"
-    s6 = _sec_cambio(D, tz, cont)
+    s2 += _titulares(cont, "internacional", "Global", "Titulares del día" if not cont["internacional"] else "Fuentes")
+    s3 = (_li(cont["chile"]) if cont["chile"] else "") + _titulares(cont, "chile", "Chile", "" if not cont["chile"] else "Fuentes")
+    s4 = (_li(cont["geopolitica"]) if cont["geopolitica"] else "") + _titulares(cont, "geopolitica", "Geopolítica", "" if not cont["geopolitica"] else "Fuentes")
+    s5 = _sec_tasas(D, cont, tz)
+    s6 = _sec_cambio(D, tz, cont) + _titulares(cont, "cambio", "Dólar")
     s7 = _sec_dolar(meta.get("dolar"), cont, tz)
-    s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>"
+    s8 = _sec_commod(D, tz) + f"<p>{cont['commodities']}</p>" + _titulares(cont, "commodities", "Commodities")
     s9 = (f"<p>{cont['bolsa']}</p>"
           + '<div class="tabs"><button class="on" data-tab="scl">Bolsa de Santiago</button><button data-tab="glob">Bolsas globales</button></div>'
           + '<div class="tab-panel on" data-tab="scl">' + (_sec_santiago(meta.get("bolsa"), tz) or "<p>Sin datos de la Bolsa de Santiago hoy.</p>") + "</div>"
-          + '<div class="tab-panel" data-tab="glob">' + _sec_bolsa(D, tz) + "</div>")
+          + '<div class="tab-panel" data-tab="glob">' + _sec_bolsa(D, tz) + "</div>"
+          + _titulares(cont, "bolsa", "Bolsa"))
     s10 = _sec_cripto(meta.get("cripto"), cont, tz)
     s11 = _sec_agenda(A, meta)
     s12 = _li(cont["riesgos"])
