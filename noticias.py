@@ -106,12 +106,32 @@ def _es_chile(titulo, fuente):
     return False   # sin señal de Chile -> fuera (mejor callar que confundir)
 
 
-def _score(titulo):
+_MACRO_CL = ("ipc", "tpm", "banco central", "imacec", "desempleo", "reunión de política", "tasa de política")
+
+
+def _score(titulo, sec=None):
     t = titulo.lower()
     s = sum(p for kw, p in C.KW.items() if kw in t)
     if any(x in t for x in C.EXCLUIR) and "chile" not in t:
         s -= 8
+    if sec == "chile" and any(k in t for k in _MACRO_CL):
+        s += 3   # el dato macro chileno del dia debe subir a "lo mas relevante"
     return s
+
+
+_COLA = re.compile(r"\s*[:|\-–—]\s*(?:dow jones|s&p|nasdaq|wall street|futuros|acciones|bolsa|mercados)(?:[ ,|/&-]*(?:dow jones|s&p ?500|s&p|nasdaq|wall street|futuros|acciones|bolsa|mercados|hoy))*\s*$", re.I)
+_SUFIJOS = re.compile(r"\s*[|\-–—]\s*(?:investing\.com[^|]*|yahoo[^|]*|bloomberg línea|infobae|el economista|expansión)\s*$", re.I)
+
+
+def limpiar_titulo(t):
+    """Quita colas SEO ('…: Dow Jones, S&P, Nasdaq, Wall Street, Futuros') y
+    nombres de medio pegados al final del titular."""
+    t = html.unescape(t).strip()
+    for _ in range(2):
+        t = _COLA.sub("", t)
+        t = _SUFIJOS.sub("", t)
+    t = re.sub(r"\s+", " ", t).strip(" :;-–—|")
+    return t
 
 
 def _fuente(entry, titulo):
@@ -132,7 +152,7 @@ def _fecha(entry):
         return None
 
 
-def buscar_seccion(consultas, top, solo_chile=False):
+def buscar_seccion(consultas, top, solo_chile=False, sec=None):
     cands = []
     for region, q in consultas:
         try:
@@ -148,6 +168,7 @@ def buscar_seccion(consultas, top, solo_chile=False):
                 continue
             if solo_chile and not _es_chile(titulo, fuente):
                 continue
+            titulo = limpiar_titulo(titulo)
             f = firma(titulo)
             if len(f) < 3:
                 continue
@@ -177,20 +198,27 @@ def recolectar(top=None):
     out = {}
     todas = []
     for sec, consultas in C.NOTICIAS.items():
-        items = buscar_seccion(consultas, top, solo_chile=(sec in ("chile", "cambio", "bolsa") and False) or sec == "chile")
+        items = buscar_seccion(consultas, top, solo_chile=(sec == "chile"), sec=sec)
         out[sec] = items
         for it in items:
             it2 = dict(it)
             it2["seccion"] = sec
             todas.append(it2)
-    # "lo mas relevante": mayor puntaje global, una historia por tema
+    # "lo mas relevante": mayor puntaje, una historia por tema, maximo 2 por
+    # seccion y SIEMPRE al menos una de Chile (si hay alguna con puntaje >= 4)
     todas.sort(key=lambda x: -x["score"])
-    vistas, rel = [], []
+    vistas, rel, por_sec = [], [], {}
     for it in todas:
-        if _misma(it["firma"], vistas):
+        if _misma(it["firma"], vistas) or por_sec.get(it["seccion"], 0) >= 2:
             continue
-        vistas.append(it["firma"])
+        vistas.append(it["firma"]); por_sec[it["seccion"]] = por_sec.get(it["seccion"], 0) + 1
         rel.append(it)
+        if len(rel) >= 6:
+            break
+    if not any(it["seccion"] == "chile" for it in rel[:4]):
+        cl = next((it for it in todas if it["seccion"] == "chile" and it["score"] >= 4 and not _misma(it["firma"], [r["firma"] for r in rel[:3]])), None)
+        if cl:
+            rel = rel[:3] + [cl] + [r for r in rel[3:] if r is not cl]
     out["relevante"] = rel[:6]
     # ULTIMA HORA: lo mas reciente con relevancia minima (distinto de "lo mas relevante")
     recientes = [it for it in todas if it.get("fecha") and it.get("horas", 99) <= 6 and it.get("base", 0) >= 5]
@@ -203,6 +231,37 @@ def recolectar(top=None):
         uh.append(it)
     out["ultima_hora"] = uh[:6]
     return out
+
+
+def dato_publicado(N, clave):
+    """Busca en los titulares chilenos de hoy la cifra de un dato macro ya publicado.
+    clave: 'ipc' -> ('IPC', '0,6%', titular) ; 'tpm' -> ('TPM', '4,50%', titular). None si no hay."""
+    pats = {
+        "ipc": (r"\bIPC\b.*?([+-]?\d{1,2},\d{1,2})\s*%", "IPC de Chile (INE)"),
+        "tpm": (r"(?:TPM|tasa de política|Banco Central).*?(?:mantiene|mantuvo|sube|subió|baja|bajó|recorta|recortó|eleva|elevó).*?(\d{1,2},\d{1,2})\s*%", "TPM del Banco Central"),
+    }
+    if clave not in pats:
+        return None
+    pat, nombre = pats[clave]
+    mensual, anual, fuente_m, titulo_m = None, None, "", ""
+    for it in (N.get("chile") or []) + (N.get("tasas") or []) + (N.get("cambio") or []):
+        if it.get("horas") is not None and it["horas"] > 30:
+            continue
+        for m in re.finditer(pat, it["titulo"], re.I):
+            v = float(m.group(1).replace(",", "."))
+            low = it["titulo"].lower()
+            if clave == "ipc":
+                # mensual: cifra chica (< 2%) o rotulada "mensual"; anual: "anual"/"12 meses" o cifra grande
+                if ("anual" in low or "12 meses" in low or "interanual" in low or v >= 2.0) and anual is None:
+                    anual = m.group(1)
+                elif v < 2.0 and mensual is None:
+                    mensual, fuente_m, titulo_m = m.group(1), it.get("fuente", ""), it["titulo"]
+            else:
+                return (nombre, m.group(1) + "%", it["titulo"], it.get("fuente", ""))
+    if clave == "ipc" and (mensual or anual):
+        valor = (f"{mensual}% mensual" if mensual else "") + (" · " if mensual and anual else "") + (f"{anual}% anual" if anual else "")
+        return (nombre, valor, titulo_m or "", fuente_m or "prensa")
+    return None
 
 
 def hace(it):

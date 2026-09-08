@@ -368,14 +368,28 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     rel = N.get("relevante") or []
     u = _q(D, "usdclp")
     ip = D.get("ipsa")
+    import noticias as _NT
     partes = []
-    if rel:
-        partes.append(rel[0]["titulo"].rstrip("."))
-    if u:
+    glob = next((it for it in rel if it.get("seccion") != "chile"), None)
+    chil = next((it for it in rel if it.get("seccion") == "chile"), None)
+    def _corta(s, n):
+        s = _NT.limpiar_titulo(s).rstrip(".")
+        if len(s) <= n:
+            return s
+        s = s[:n].rsplit(" ", 1)[0].rstrip(",;:")
+        return s + "…"
+    if glob:
+        partes.append(_corta(glob["titulo"], 120))
+    if chil:
+        partes.append(_corta(chil["titulo"], 110))
+    b = meta.get("bolsa")
+    if u and b and b.get("var") is not None:
+        partes.append(f"el dólar {_dir(u['chg'], 'sube', 'baja', 'se mantiene')} a ${fmt(u['price'])} y el IPSA estimado {_dir(b['var'], 'sube', 'baja', 'se mantiene')} {pct(b['var'], 1)}")
+    elif u:
         partes.append(f"el dólar {_dir(u['chg'], 'sube', 'baja', 'se mantiene')} a ${fmt(u['price'])}")
-    if ip:
-        partes.append(f"el IPSA {'cerró en' if ip.get('chg') is None else ('subió a' if ip['chg'] > 0 else 'cayó a')} {fmt(ip['price'], 0)} puntos según prensa")
     titular = "; ".join(partes) if partes else "Informe matinal de mercados"
+    if titular:
+        titular = titular[0].upper() + titular[1:]
     relevante = [{"tag": _tag_de(it.get("seccion")), "html": _li_titular(it)} for it in rel[:4]]
 
     def lista(sec):
@@ -384,7 +398,7 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     internacional = []   # sin IA: las noticias van como tarjetas (cont["titulares"])
     tasas_txt = []       # los datos de tasas se muestran como tarjetas + curva
     cambio_txt = " ".join(h for h in hechos if h.startswith(("Dólar", "Variación semanal", "Euro:", "Real")))
-    comm_txt = " ".join(h for h in hechos if h.startswith(("Petróleo", "Cobre", "Oro", "Plata")))
+    comm_txt = ""   # sin IA, las tarjetas y la tabla ya lo dicen todo
     bolsa_txt = " ".join(h for h in hechos if h.startswith(("IPSA", "ETF", "S&P", "Futuro", "Euro Stoxx", "Nikkei", "Hang", "Shanghái", "VIX", "Bitcoin")))
     try:
         import bolsa as BL
@@ -394,9 +408,35 @@ def redactar_reglas(D, N, A, meta, hechos, tz):
     except Exception:
         pass
     riesgos = []
+    hoy = meta["ahora"].date()
+    vistos_cat = set()
     for e in A:
-        if e["impacto"] == "Alto":
-            riesgos.append(f"<strong>{html.escape(e['titulo'])} ({_fecha_corta(e['fecha'])}):</strong> evento de alto impacto en la agenda.")
+        if e["impacto"] != "Alto":
+            continue
+        # una entrada por (dia, tipo): no repetir "Inflación" tres veces por PPI, PPI subyacente, etc.
+        tl = e["titulo"].lower()
+        cat = ("tpm" if ("banco central de chile" in tl or "tpm" in tl) else "fed" if ("fomc" in tl or "fed" in tl)
+               else "empleo" if any(k in tl for k in ("nómina", "empleo", "desempleo")) else
+               "inflacion" if any(k in tl for k in ("ipc", "inflación", "pce", "ppi", "precios")) else tl[:20])
+        if (e["fecha"], cat) in vistos_cat:
+            continue
+        vistos_cat.add((e["fecha"], cat))
+        d = (e["fecha"] - hoy).days
+        cuando = "hoy" if d == 0 else ("mañana" if d == 1 else f"en {d} días, el {_fecha_corta(e['fecha'])}")
+        t = e["titulo"].lower()
+        esp = f" Esperado {e['forecast']}" + (f", previo {e['previous']}" if e.get("previous") else "") + "." if e.get("forecast") else ""
+        if "banco central de chile" in t or "tpm" in t:
+            tpm = ((D.get("chile") or {}).get("tpm") or {}).get("valor")
+            txt = f"<strong>Decisión de TPM del Banco Central ({cuando}):</strong> el comunicado (18:00) puede mover el dólar y las tasas locales" + (f"; la TPM está en {fmt(tpm, 2)}%." if tpm else ".")
+        elif "fomc" in t or "fed" in t:
+            txt = f"<strong>Reunión de la Fed ({cuando}):</strong> la decisión de tasas mueve al dólar global, a las bolsas y, por contagio, al peso."
+        elif "nómina" in t or "empleo" in t or "desempleo" in t:
+            txt = f"<strong>Empleo en EE.UU. ({cuando}):</strong> {html.escape(e['titulo'])}, dato clave para las apuestas sobre la Fed.{esp}"
+        elif "ipc" in t or "inflación" in t or "pce" in t or "ppi" in t or "precios" in t:
+            txt = f"<strong>Inflación ({cuando}):</strong> {html.escape(e['titulo'])}; un dato sobre lo esperado presiona tasas al alza y al dólar.{esp}"
+        else:
+            txt = f"<strong>{html.escape(e['titulo'])} ({cuando}):</strong> dato de alto impacto.{esp}"
+        riesgos.append(txt)
         if len(riesgos) >= 3:
             break
     for it in (N.get("geopolitica") or [])[:2]:

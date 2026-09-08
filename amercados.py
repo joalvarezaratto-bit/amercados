@@ -64,7 +64,7 @@ def _toca_enviar(ahora):
     return True, ""
 
 
-def construir(sin_ia=False, verbose=True):
+def construir(sin_ia=False, verbose=True, guardar_foto=False):
     """Recolecta todo y genera el HTML. Devuelve (ruta, contenido, meta)."""
     import datos, noticias, agenda, redactor, informe
     if sin_ia:
@@ -90,12 +90,13 @@ def construir(sin_ia=False, verbose=True):
         meta["dolar"] = None
     meta["bolsa"] = _bolsa_santiago(verbose, con_por_que=True)
     meta["cripto"] = _cripto(verbose)
-    meta["delta"] = _delta_informe(D, meta, ahora, guardar=True)
+    meta["delta"] = _delta_informe(D, meta, ahora, guardar=guardar_foto)
     if verbose:
         print(f"   {len(A)} eventos · noticias...")
     N = noticias.recolectar()
     if verbose:
         print("   " + " · ".join(f"{s}:{len(v)}" for s, v in N.items()))
+    A, meta["resultados"] = _datos_locales_publicados(N, A, meta.get("resultados") or [], verbose)
     # leer el cuerpo de las notas mas relevantes (solo si la IA esta disponible de verdad)
     import redactor as _RD
     if C.LEER_NOTAS > 0 and _RD.ia_disponible(meta):
@@ -300,6 +301,7 @@ def actualizar(gate=False):
         import noticias, redactor
         print("   titulares frescos...")
         N = noticias.recolectar()
+        A, meta["resultados"] = _datos_locales_publicados(N, A, meta.get("resultados") or [], True)
         hechos = redactor.frases_datos(D, TZ, meta)
         meta["hechos"] = hechos
         cont = redactor.redactar_reglas(D, N, A, meta, hechos, TZ)
@@ -380,11 +382,28 @@ def _cripto(verbose=True):
         return None
 
 
+def _datos_locales_publicados(N, A, resultados, verbose=True):
+    """Si la prensa ya trae el IPC o la TPM de hoy, los pasa a 'datos publicados'
+    y saca de la agenda el IPC 'fecha aproximada'."""
+    import noticias as _NT
+    res = list(resultados)
+    for clave in ("ipc", "tpm"):
+        d = _NT.dato_publicado(N, clave)
+        if d:
+            nombre, valor, titulo, fuente = d
+            res.append({"hora": "", "titulo": f"{nombre} (según prensa: {fuente})", "actual": valor, "forecast": "", "previous": ""})
+            if clave == "ipc":
+                A = [e for e in A if "IPC de Chile" not in e["titulo"]]
+            if verbose:
+                print(f"   dato publicado por prensa: {nombre} {valor}")
+    return A, res
+
+
 def _delta_informe(D, meta, ahora, guardar):
     """Compara con la foto guardada del informe de la mañana ANTERIOR y, si
     corresponde, guarda la foto de hoy. Devuelve {desde, items} o None."""
     from redactor import fmt, _q, _fecha_corta
-    foto = {"fecha": ahora.strftime("%Y-%m-%d")}
+    foto = {"fecha": ahora.strftime("%Y-%m-%d"), "hora": ahora.strftime("%H:%M")}
     for k in ("usdclp", "cobre", "brent", "oro", "spx", "btc", "vix", "us10y"):
         q = _q(D, k)
         if q and q.get("price") is not None:
@@ -395,7 +414,7 @@ def _delta_informe(D, meta, ahora, guardar):
     s = _state()
     prev = s.get("foto_informe")
     out = None
-    if prev and prev.get("fecha") and prev["fecha"] < foto["fecha"]:
+    if prev and prev.get("fecha") and (prev["fecha"] < foto["fecha"] or (not guardar and prev["fecha"] == foto["fecha"])):
         nombres = {"usdclp": ("Dólar", "$", 2), "ipsa": ("IPSA est.", "", 0), "cobre": ("Cobre", "US$", 2),
                    "brent": ("Brent", "US$", 2), "oro": ("Oro", "US$", 0), "spx": ("S&P 500", "", 0),
                    "btc": ("Bitcoin", "US$", 0), "vix": ("VIX", "", 1), "us10y": ("Tesoro 10a", "", 2)}
@@ -406,7 +425,8 @@ def _delta_informe(D, meta, ahora, guardar):
                 items.append((n, (u + fmt(foto[k], dec)) + ("%" if k == "us10y" else ""), chg))
         d0 = dt.date.fromisoformat(prev["fecha"])
         dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][d0.weekday()]
-        out = {"desde": f"{dia} {_fecha_corta(d0)}", "items": items}
+        desde = (f"de las {prev['hora']} de hoy" if prev["fecha"] == foto["fecha"] and prev.get("hora") else f"{dia} {_fecha_corta(d0)}")
+        out = {"desde": desde, "items": items}
     if guardar:
         s["foto_informe"] = foto
         _save_state(s)
@@ -554,7 +574,7 @@ def main():
             if not toca:
                 print(f"[{ahora:%Y-%m-%d %H:%M} Chile] no se envía: {motivo}.")
                 return
-        ruta, cont, meta = construir(sin_ia="--sin-ia" in args)
+        ruta, cont, meta = construir(sin_ia="--sin-ia" in args, guardar_foto=True)
         enviar(ruta, cont, meta)
     elif cmd == "flash":
         flash(gate="--gate" in args)

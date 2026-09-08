@@ -341,7 +341,7 @@ def _ticker(D, tz, b=None):
         items_ipsa = None
     if u:
         ahora = dt.datetime.now(tz)
-        abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
+        abierto = _mercado_abierto(ahora)
         sp_u = _spark(u.get("candles"))
         if abierto:
             items.append(("Dólar (spot)", "$" + fmt(u["price"]), _flecha(u["chg"], 2) + sp_u))
@@ -679,7 +679,8 @@ def _franja_delta(meta):
     if not dl or not dl.get("items"):
         return ""
     items = "".join(f'<span>{html.escape(n)} <b>{v}</b> {_flecha(chg, 1)}</span>' for n, v, chg in dl["items"])
-    return f'<div class="delta"><div class="d-lab">Desde el informe del {dl["desde"]}</div><div class="d-row">{items}</div></div>'
+    lab = ("Desde el informe " + dl["desde"]) if dl["desde"].startswith("de las") else ("Desde el informe del " + dl["desde"])
+    return f'<div class="delta"><div class="d-lab">{lab}</div><div class="d-row">{items}</div></div>'
 
 
 def _cards(items, tag):
@@ -798,7 +799,8 @@ _COLORES = {
 
 def _mercado_abierto(ahora):
     feriado = ahora.strftime("%m-%d") in C.FERIADOS_CL or ahora.strftime("%Y-%m-%d") in C.FERIADOS_CL
-    return ahora.weekday() < 5 and not feriado and (9 <= ahora.hour < 17 or (ahora.hour == 9 and ahora.minute >= 30))
+    hm = ahora.hour * 60 + ahora.minute
+    return ahora.weekday() < 5 and not feriado and (9 * 60 + 30) <= hm < 16 * 60
 
 
 def _spark(candles, n=12, ancho=44, alto=14):
@@ -828,7 +830,7 @@ def _tape(D, tz, b=None, k=None):
     if u:
         cierres = DS.cierres_diarios(u["candles"], 2, tz)
         ahora = dt.datetime.now(tz)
-        abierto = ahora.weekday() < 5 and 9 <= ahora.hour < 17
+        abierto = _mercado_abierto(ahora)
         if not abierto and len(cierres) == 2:
             c1, c0 = cierres[-1], cierres[-2]
             dia = ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."][c1["fecha"].weekday()]
