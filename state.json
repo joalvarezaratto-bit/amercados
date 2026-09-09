@@ -2,25 +2,23 @@
  "ultimo_envio": "2026-09-09",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-09-08": [
-   18
+  "2026-09-09": [
+   13
   ]
  },
  "aviso_salud": "2026-09-08",
  "actualizaciones": {
-  "2026-09-08": [
-   16,
-   19,
-   20
+  "2026-09-09": [
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-09-02",
-  "price": 11500.0,
+  "fecha": "2026-09-09",
+  "price": 11400.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9XOE5NWU40Q0ZRY2Vid0ljRFg0YVJkX3dtc00tc1F6TjdQMl8xeUxQZmIxb3NsaEY4aW5fXzZ4LTJmOE5UeUFJek5WeFpBTnZQc3diUjlYaVpaeFdHaEVac1VCUC1NbVBm?oc=5",
-  "texto": "IPSA sigue desafiando a la incertidumbre y sube a niveles de 11.500 puntos al inicio de la tarde junto con bolsas de la regi\u00f3n"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5jRXRTR0hOUG90cGJiZmw1NE51TnRsSkIwS1M4cWRrdFBsOWRhcHlwMndZbUswTDZRcTFKbXBZd3Y3ZHBhU19IVXBKWEk0LVpGbmlMOWYzU1BBbUVwNlhidGZxTzdiMkk1?oc=5",
+  "texto": "IPSA pierde los 11.400 puntos mientras Wall Street abre en rojo a medida que el petr\u00f3leo Brent supera los US$ 100 por barril"
  },
  "foto_informe": {
   "fecha": "2026-09-09",
