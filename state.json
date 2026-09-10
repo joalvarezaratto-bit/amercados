@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-09-09",
+ "ultimo_envio": "2026-09-10",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-09-09": [
@@ -24,16 +24,17 @@
   "texto": "IPSA pierde los 11.400 puntos mientras Wall Street abre en rojo a medida que el petr\u00f3leo Brent supera los US$ 100 por barril"
  },
  "foto_informe": {
-  "fecha": "2026-09-09",
-  "hora": "08:50",
-  "usdclp": 925.14,
-  "cobre": 6.76,
-  "brent": 100.95,
-  "oro": 4449.5,
-  "spx": 7673.52,
-  "btc": 79150.88,
-  "vix": 16.4,
-  "us10y": 4.806
+  "fecha": "2026-09-10",
+  "hora": "08:49",
+  "usdclp": 931.31,
+  "cobre": 6.597,
+  "brent": 101.94,
+  "oro": 4431.6,
+  "spx": 7636.36,
+  "btc": 77930.2,
+  "vix": 16.61,
+  "us10y": 4.837,
+  "ipsa": 11400.0
  },
  "dolar_cierre": {
   "fecha": "2026-09-09",
