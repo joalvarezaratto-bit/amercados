@@ -1,57 +1,66 @@
 name: AMercados - informe matinal + flashes
 
-# Corre cada 20 minutos (GitHub Actions ejecuta el cron con atrasos de hasta
-# horas; con mas corridas y ventanas de 2 h en el bot nunca se pierde un envio). El bot decide con `--gate` si en Chile ya
-# son las 07:xx de un dia habil (informe completo), las 13:xx / 18:xx (flash
-# corto con precios + titulares nuevos) o las 10/13/16/19 (edicion viva: se
-# regenera la pagina con datos frescos y el texto de la mañana). Asi el horario de verano nunca lo
-# descuadra (misma tecnica que news-bot y dolar-bot). GitHub Actions puede
-# atrasarse unos minutos: los envios llegan ~:05-:20.
+# GitHub Actions NO respeta el cron: en la practica lanza el bot 7-8 veces al
+# dia con huecos de 3-5 horas. Para no depender de eso, cada corrida se queda
+# VIVA hasta ~5,7 horas revisando cada 5 minutos si toca enviar algo (informe,
+# flash, edicion viva, salud). Las corridas se encadenan gracias al grupo de
+# concurrencia: la siguiente espera a que termine la anterior. Asi los envios
+# salen con precision de minutos aunque el cron llegue tarde.
 
 on:
   schedule:
-    - cron: "7,27,47 * * * *"   # cada 20 min: GitHub atrasa el cron, asi hay mas oportunidades
-  workflow_dispatch:      # boton "Run workflow" para mandarlo a mano (sin gate)
+    - cron: "17 */2 * * *"   # cada 2 horas: solo necesita "despertar" antes de que termine la corrida anterior
+  workflow_dispatch:          # boton "Run workflow": manda el informe ahora (sin gate) y luego vigila
 
 permissions:
   contents: write
 
 concurrency:
-  group: amercados-estado
+  group: amercados-vigilante
   cancel-in-progress: false
 
 jobs:
-  informe:
+  vigilante:
     runs-on: ubuntu-latest
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - name: Generar y enviar el informe
+      - name: Vigilar y enviar (bucle de ~5,6 horas, revisa cada 5 min)
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            python amercados.py send --gate
-            python amercados.py flash --gate
-            python amercados.py actualizar --gate
-            python amercados.py health
-          else
-            python amercados.py send
-          fi
-      - name: Guardar estado y publicar HTML (GitHub Pages en docs/)
+          BCCH_TOKEN: ${{ secrets.BCCH_TOKEN }}
         run: |
           git config user.name "amercados-bot"
           git config user.email "amercados-bot@users.noreply.github.com"
-          # cada archivo POR SEPARADO (si uno no existe, no bloquea a los demas)
-          git add state.json 2>/dev/null || true
-          git add noticias_vistas.json 2>/dev/null || true
-          git add edicion_hoy.json 2>/dev/null || true
-          git add volumen_hist.json 2>/dev/null || true
-          git add docs 2>/dev/null || true
-          git commit -m "informe $(date -u +%Y-%m-%d)" || { echo "sin cambios"; exit 0; }
-          git push || (git pull --rebase --autostash && git push) || echo "no se pudo subir, la proxima corrida reintenta"
+          guardar() {
+            git add state.json 2>/dev/null || true
+            git add docs 2>/dev/null || true
+            git add noticias_vistas.json 2>/dev/null || true
+            git add edicion_hoy.json 2>/dev/null || true
+            git add volumen_hist.json 2>/dev/null || true
+            if git commit -q -m "informe $(TZ=America/Santiago date +%Y-%m-%d\ %H:%M)"; then
+              git pull -q --rebase --autostash || true
+              git push -q || echo "no se pudo subir; se reintenta en la proxima vuelta"
+            fi
+          }
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python amercados.py send || true
+            guardar
+          fi
+          fin=$((SECONDS + 20400))   # 5 h 40 min
+          while [ $SECONDS -lt $fin ]; do
+            git pull -q --rebase --autostash || true
+            python amercados.py send --gate || true
+            python amercados.py flash --gate || true
+            python amercados.py actualizar --gate || true
+            python amercados.py health || true
+            guardar
+            sleep 300
+          done
+          echo "corrida terminada; la siguiente ya deberia estar en cola"
