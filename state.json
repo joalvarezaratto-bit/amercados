@@ -10,7 +10,8 @@
  "actualizaciones": {
   "2026-09-14": [
    10,
-   16
+   16,
+   19
   ]
  },
  "ipsa_cierre": {
@@ -36,7 +37,7 @@
  "dolar_cierre": {
   "fecha": "2026-09-14",
   "price": 959.0,
-  "hora": "18:00"
+  "hora": "19:01"
  },
  "aviso_faltante": "2026-09-08"
 }
