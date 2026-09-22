@@ -2,24 +2,24 @@
  "ultimo_envio": "2026-09-22",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-09-21": [
-   13,
-   18
+  "2026-09-22": [
+   13
   ]
  },
- "aviso_salud": "2026-09-21",
+ "aviso_salud": "2026-09-22",
  "actualizaciones": {
   "2026-09-22": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-09-09",
+  "fecha": "2026-09-22",
   "price": 11400.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5jRXRTR0hOUG90cGJiZmw1NE51TnRsSkIwS1M4cWRrdFBsOWRhcHlwMndZbUswTDZRcTFKbXBZd3Y3ZHBhU19IVXBKWEk0LVpGbmlMOWYzU1BBbUVwNlhidGZxTzdiMkk1?oc=5",
-  "texto": "IPSA pierde los 11.400 puntos mientras Wall Street abre en rojo a medida que el petr\u00f3leo Brent supera los US$ 100 por barril"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE40czhMOVZsS0NLbkl5QUE5OV9wRkt3RW9kandCdTVRNkRkMzRVcnFfYVN0anI1cUprSjkyaEE1LUl0MnM2YUkxV3I3ZENrVm1Kc01xdWNGNms0YmxhRm9DQmFJNGVRYm5B?oc=5",
+  "texto": "IPSA sube en la apertura y supera los 11.400 puntos encabezado por Latam en medio de las crecientes esperanzas sobre Medio Oriente"
  },
  "foto_informe": {
   "fecha": "2026-09-22",
