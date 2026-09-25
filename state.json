@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-09-24",
+ "ultimo_envio": "2026-09-25",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-09-24": [
@@ -25,17 +25,16 @@
   "texto": "IPSA sube en la apertura y supera los 11.400 puntos encabezado por Latam en medio de las crecientes esperanzas sobre Medio Oriente"
  },
  "foto_informe": {
-  "fecha": "2026-09-24",
-  "hora": "07:00",
-  "usdclp": 960.98,
-  "cobre": 6.74,
-  "brent": 105.43,
-  "oro": 4289.1,
-  "spx": 7706.03,
-  "btc": 83277.2,
-  "vix": 16.56,
-  "us10y": 5.114,
-  "ipsa": 11410.557040243106
+  "fecha": "2026-09-25",
+  "hora": "07:01",
+  "usdclp": 961.42,
+  "cobre": 6.767,
+  "brent": 98.88,
+  "oro": 4327.3,
+  "spx": 7704.13,
+  "btc": 84545.55,
+  "vix": 15.36,
+  "us10y": 5.162
  },
  "dolar_cierre": {
   "fecha": "2026-09-24",
