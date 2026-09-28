@@ -10,7 +10,8 @@
  "actualizaciones": {
   "2026-09-28": [
    10,
-   13
+   13,
+   16
   ]
  },
  "ipsa_cierre": {
@@ -34,9 +35,9 @@
   "us10y": 5.184
  },
  "dolar_cierre": {
-  "fecha": "2026-09-25",
-  "price": 960.63,
-  "hora": "19:02"
+  "fecha": "2026-09-28",
+  "price": 966.62,
+  "hora": "16:00"
  },
  "aviso_faltante": "2026-09-08"
 }
