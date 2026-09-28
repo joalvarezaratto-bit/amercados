@@ -2,24 +2,24 @@
  "ultimo_envio": "2026-09-28",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-09-25": [
-   13,
-   18
+  "2026-09-28": [
+   13
   ]
  },
  "aviso_salud": "2026-09-24",
  "actualizaciones": {
   "2026-09-28": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-09-22",
-  "price": 11400.0,
+  "fecha": "2026-09-28",
+  "price": 11200.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE40czhMOVZsS0NLbkl5QUE5OV9wRkt3RW9kandCdTVRNkRkMzRVcnFfYVN0anI1cUprSjkyaEE1LUl0MnM2YUkxV3I3ZENrVm1Kc01xdWNGNms0YmxhRm9DQmFJNGVRYm5B?oc=5",
-  "texto": "IPSA sube en la apertura y supera los 11.400 puntos encabezado por Latam en medio de las crecientes esperanzas sobre Medio Oriente"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE80UmxmT1EwQTBLZUVrR0p6YmJRUmhTTFltMzB5cjloLWpYTWdOYXNSQXY5cUk5Rll0endkZFlkQU4yOTlwUmZmU01meDlKRjlxd3pVYkxoSVZmR0ZnbjRzd2FSQm1wQnJp?oc=5",
+  "texto": "IPSA retrocede a niveles de 11.200 puntos ya que el estancamiento diplom\u00e1tico en Medio Oriente sigue impulsando al petr\u00f3leo"
  },
  "foto_informe": {
   "fecha": "2026-09-28",
