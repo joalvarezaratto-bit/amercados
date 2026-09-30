@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-09-29",
+ "ultimo_envio": "2026-09-30",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-09-29": [
@@ -25,17 +25,17 @@
   "texto": "IPSA retrocede a niveles de 11.200 puntos ya que el estancamiento diplom\u00e1tico en Medio Oriente sigue impulsando al petr\u00f3leo"
  },
  "foto_informe": {
-  "fecha": "2026-09-29",
-  "hora": "07:00",
-  "usdclp": 965.7,
-  "cobre": 6.608,
-  "brent": 97.26,
-  "oro": 4178.0,
-  "spx": 7683.69,
-  "btc": 84221.34,
-  "vix": 16.08,
-  "us10y": 5.24,
-  "ipsa": 11200.0
+  "fecha": "2026-09-30",
+  "hora": "07:02",
+  "usdclp": 972.08,
+  "cobre": 6.628,
+  "brent": 97.22,
+  "oro": 4218.7,
+  "spx": 7670.84,
+  "btc": 83655.59,
+  "vix": 16.03,
+  "us10y": 5.255,
+  "ipsa": 11115.596032605106
  },
  "dolar_cierre": {
   "fecha": "2026-09-29",
