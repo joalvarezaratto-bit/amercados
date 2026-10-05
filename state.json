@@ -10,7 +10,8 @@
  "actualizaciones": {
   "2026-10-05": [
    10,
-   13
+   13,
+   16
   ]
  },
  "ipsa_cierre": {
@@ -34,9 +35,9 @@
   "us10y": 5.277
  },
  "dolar_cierre": {
-  "fecha": "2026-10-02",
-  "price": 989.6,
-  "hora": "19:04"
+  "fecha": "2026-10-05",
+  "price": 970.92,
+  "hora": "16:17"
  },
  "aviso_faltante": "2026-09-08"
 }
