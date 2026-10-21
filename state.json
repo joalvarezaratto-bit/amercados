@@ -2,24 +2,24 @@
  "ultimo_envio": "2026-10-21",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-10-20": [
-   13,
-   18
+  "2026-10-21": [
+   13
   ]
  },
- "aviso_salud": "2026-10-20",
+ "aviso_salud": "2026-10-21",
  "actualizaciones": {
   "2026-10-21": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-09-28",
-  "price": 11200.0,
+  "fecha": "2026-10-21",
+  "price": 10900.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE80UmxmT1EwQTBLZUVrR0p6YmJRUmhTTFltMzB5cjloLWpYTWdOYXNSQXY5cUk5Rll0endkZFlkQU4yOTlwUmZmU01meDlKRjlxd3pVYkxoSVZmR0ZnbjRzd2FSQm1wQnJp?oc=5",
-  "texto": "IPSA retrocede a niveles de 11.200 puntos ya que el estancamiento diplom\u00e1tico en Medio Oriente sigue impulsando al petr\u00f3leo"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9XMWI1ekZNUjBOdGR6TjFTdm9ocEdUS0pFb0lQeW56OFVGWVJlNWE1MnlTTjk0ZGp3SjVENHlZcWZlajBIZ2lTaTUxYVp3U3k2SDZSZkNjZnRxeVJMTnd0UklfVGFBV1dM?oc=5",
+  "texto": "IPSA arriesga perder los 10.900 puntos mientras Wall Street abre al alza tras los buenos resultados de SpaceX"
  },
  "foto_informe": {
   "fecha": "2026-10-21",
