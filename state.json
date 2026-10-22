@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-10-21",
+ "ultimo_envio": "2026-10-22",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-10-21": [
@@ -25,16 +25,17 @@
   "texto": "IPSA arriesga perder los 10.900 puntos mientras Wall Street abre al alza tras los buenos resultados de SpaceX"
  },
  "foto_informe": {
-  "fecha": "2026-10-21",
-  "hora": "07:01",
-  "usdclp": 974.55,
-  "cobre": 6.5495,
-  "brent": 110.36,
-  "oro": 4140.5,
-  "spx": 7712.57,
-  "btc": 83365.38,
-  "vix": 17.37,
-  "us10y": 5.117
+  "fecha": "2026-10-22",
+  "hora": "07:04",
+  "usdclp": 981.07,
+  "cobre": 6.4345,
+  "brent": 112.16,
+  "oro": 4101.3,
+  "spx": 7757.17,
+  "btc": 81985.65,
+  "vix": 18.54,
+  "us10y": 5.146,
+  "ipsa": 10900.0
  },
  "dolar_cierre": {
   "fecha": "2026-10-21",
