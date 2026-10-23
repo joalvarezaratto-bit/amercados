@@ -2,24 +2,24 @@
  "ultimo_envio": "2026-10-23",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-10-22": [
-   13,
-   18
+  "2026-10-23": [
+   13
   ]
  },
  "aviso_salud": "2026-10-23",
  "actualizaciones": {
   "2026-10-23": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-10-21",
-  "price": 10900.0,
-  "chg": null,
-  "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9XMWI1ekZNUjBOdGR6TjFTdm9ocEdUS0pFb0lQeW56OFVGWVJlNWE1MnlTTjk0ZGp3SjVENHlZcWZlajBIZ2lTaTUxYVp3U3k2SDZSZkNjZnRxeVJMTnd0UklfVGFBV1dM?oc=5",
-  "texto": "IPSA arriesga perder los 10.900 puntos mientras Wall Street abre al alza tras los buenos resultados de SpaceX"
+  "fecha": "2026-10-23",
+  "price": 10780.0,
+  "chg": -1.88,
+  "fuente": "Publimicro",
+  "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxPWHUzS1R5dlNZYlpqaEpKajREcjhfc2pUemxHT1hia0otLXh3aGNjSEwxdHlJOUpHSUVqX3hKMi1iSnk5MzAwT1duRTJZR21XMzdNY1p1NlVjazZmZ3FCX3VSVGFZZFdSbnZDaXNON3h6eGxKSjhiekJDanNNNFduSThXYS1ZaDd6OHpUQmVEdGs0M011YVg0X1lFS1Vqd09UT3Z3NldDY2RJV3M3OWVLeTZqdlhEQUIt?oc=5",
+  "texto": "Bolsa de Santiago registra su mayor ca\u00edda desde mayo: IPSA pierde 1,88% y cierra en 10.780 puntos"
  },
  "foto_informe": {
   "fecha": "2026-10-23",
