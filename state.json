@@ -3,7 +3,8 @@
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-10-26": [
-   13
+   13,
+   18
   ]
  },
  "aviso_salud": "2026-10-26",
@@ -37,8 +38,8 @@
  },
  "dolar_cierre": {
   "fecha": "2026-10-26",
-  "price": 989.17,
-  "hora": "16:02"
+  "price": 988.5,
+  "hora": "18:00"
  },
  "aviso_faltante": "2026-09-08"
 }
