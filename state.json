@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-10-29",
+ "ultimo_envio": "2026-10-30",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-10-29": [
@@ -7,7 +7,7 @@
    18
   ]
  },
- "aviso_salud": "2026-10-29",
+ "aviso_salud": "2026-10-30",
  "actualizaciones": {
   "2026-10-29": [
    10,
@@ -25,16 +25,16 @@
   "texto": "Bolsa de Santiago registra su mayor ca\u00edda desde mayo: IPSA pierde 1,88% y cierra en 10.780 puntos"
  },
  "foto_informe": {
-  "fecha": "2026-10-29",
+  "fecha": "2026-10-30",
   "hora": "07:02",
-  "usdclp": 987.4,
-  "cobre": 6.592,
-  "brent": 110.59,
-  "oro": 4038.2,
-  "spx": 7743.98,
-  "btc": 80075.06,
-  "vix": 17.06,
-  "us10y": 5.045
+  "usdclp": 985.07,
+  "cobre": 6.524,
+  "brent": 113.27,
+  "oro": 4001.7,
+  "spx": 7720.39,
+  "btc": 77472.96,
+  "vix": 18.33,
+  "us10y": 4.989
  },
  "dolar_cierre": {
   "fecha": "2026-10-29",
