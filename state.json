@@ -2,24 +2,24 @@
  "ultimo_envio": "2026-10-30",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-10-29": [
-   13,
-   18
+  "2026-10-30": [
+   13
   ]
  },
  "aviso_salud": "2026-10-30",
  "actualizaciones": {
   "2026-10-30": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-10-23",
-  "price": 10780.0,
-  "chg": -1.88,
-  "fuente": "Publimicro",
-  "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxPWHUzS1R5dlNZYlpqaEpKajREcjhfc2pUemxHT1hia0otLXh3aGNjSEwxdHlJOUpHSUVqX3hKMi1iSnk5MzAwT1duRTJZR21XMzdNY1p1NlVjazZmZ3FCX3VSVGFZZFdSbnZDaXNON3h6eGxKSjhiekJDanNNNFduSThXYS1ZaDd6OHpUQmVEdGs0M011YVg0X1lFS1Vqd09UT3Z3NldDY2RJV3M3OWVLeTZqdlhEQUIt?oc=5",
-  "texto": "Bolsa de Santiago registra su mayor ca\u00edda desde mayo: IPSA pierde 1,88% y cierra en 10.780 puntos"
+  "fecha": "2026-10-30",
+  "price": 10400.0,
+  "chg": null,
+  "fuente": "Diario Financiero",
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBUdURlRDBzOTd4cUZYOUFRWTFjREJjbkNMem4zYWRhOTFERnRzdzNXV1h1OUdFZThqbWo1NHZVOGZjYURaVThhSTFhanBDRUx4NkVrYUF1a08za1BNdXJ2VDlnb2c5eXNh?oc=5",
+  "texto": "Bolsa chilena sigue en ca\u00edda libre y el IPSA ronda los 10.400 puntos mientras crece el temor a una escalada b\u00e9lica en Medio Oriente"
  },
  "foto_informe": {
   "fecha": "2026-10-30",
