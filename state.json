@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-10-30",
+ "ultimo_envio": "2026-11-02",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-10-30": [
@@ -25,16 +25,17 @@
   "texto": "Bolsa chilena sigue en ca\u00edda libre y el IPSA ronda los 10.400 puntos mientras crece el temor a una escalada b\u00e9lica en Medio Oriente"
  },
  "foto_informe": {
-  "fecha": "2026-10-30",
-  "hora": "07:02",
-  "usdclp": 985.07,
-  "cobre": 6.524,
-  "brent": 113.27,
-  "oro": 4001.7,
-  "spx": 7720.39,
-  "btc": 77472.96,
-  "vix": 18.33,
-  "us10y": 4.989
+  "fecha": "2026-11-02",
+  "hora": "07:01",
+  "usdclp": 993.37,
+  "cobre": 6.522,
+  "brent": 108.28,
+  "oro": 3907.6,
+  "spx": 7580.07,
+  "btc": 77880.49,
+  "vix": 18.83,
+  "us10y": 4.929,
+  "ipsa": 10400.0
  },
  "dolar_cierre": {
   "fecha": "2026-10-30",
