@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-11-02",
+ "ultimo_envio": "2026-11-03",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-11-02": [
@@ -7,7 +7,7 @@
    18
   ]
  },
- "aviso_salud": "2026-11-02",
+ "aviso_salud": "2026-11-03",
  "actualizaciones": {
   "2026-11-02": [
    13,
@@ -24,17 +24,17 @@
   "texto": "Bolsa chilena sigue en ca\u00edda libre y el IPSA ronda los 10.400 puntos mientras crece el temor a una escalada b\u00e9lica en Medio Oriente"
  },
  "foto_informe": {
-  "fecha": "2026-11-02",
+  "fecha": "2026-11-03",
   "hora": "07:01",
-  "usdclp": 993.37,
-  "cobre": 6.522,
-  "brent": 108.28,
-  "oro": 3907.6,
-  "spx": 7580.07,
-  "btc": 77880.49,
-  "vix": 18.83,
-  "us10y": 4.929,
-  "ipsa": 10400.0
+  "usdclp": 976.85,
+  "cobre": 6.3715,
+  "brent": 105.75,
+  "oro": 3919.1,
+  "spx": 7541.4,
+  "btc": 76929.66,
+  "vix": 21.45,
+  "us10y": 4.894,
+  "ipsa": 10464.201440163786
  },
  "dolar_cierre": {
   "fecha": "2026-11-02",
