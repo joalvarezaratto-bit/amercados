@@ -2,26 +2,23 @@
  "ultimo_envio": "2026-11-03",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-11-02": [
-   13,
-   18
+  "2026-11-03": [
+   13
   ]
  },
  "aviso_salud": "2026-11-03",
  "actualizaciones": {
-  "2026-11-02": [
-   13,
-   16,
-   19
+  "2026-11-03": [
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-10-30",
+  "fecha": "2026-11-03",
   "price": 10400.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBUdURlRDBzOTd4cUZYOUFRWTFjREJjbkNMem4zYWRhOTFERnRzdzNXV1h1OUdFZThqbWo1NHZVOGZjYURaVThhSTFhanBDRUx4NkVrYUF1a08za1BNdXJ2VDlnb2c5eXNh?oc=5",
-  "texto": "Bolsa chilena sigue en ca\u00edda libre y el IPSA ronda los 10.400 puntos mientras crece el temor a una escalada b\u00e9lica en Medio Oriente"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9TS0ZMekZKZnpMaFZMS0hwazRyekt5Q0lLd1gtcC1KWGhQc2Jxay1TNWt2QV9MYzFWVV91MWJMVEFHSXMyX0phcnJsM3B1cDhkN3h6djVDb3k1cmphUmN5V3ZVaUtDOUJn?oc=5",
+  "texto": "IPSA sube a bordear 10.400 puntos mientras el petr\u00f3leo contin\u00faa en baja y EEUU inicia las elecciones de mitad de mandato"
  },
  "foto_informe": {
   "fecha": "2026-11-03",
