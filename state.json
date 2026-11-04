@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-11-03",
+ "ultimo_envio": "2026-11-04",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-11-03": [
@@ -7,7 +7,7 @@
    18
   ]
  },
- "aviso_salud": "2026-11-03",
+ "aviso_salud": "2026-11-04",
  "actualizaciones": {
   "2026-11-03": [
    13,
@@ -24,17 +24,17 @@
   "texto": "IPSA sube a bordear 10.400 puntos mientras el petr\u00f3leo contin\u00faa en baja y EEUU inicia las elecciones de mitad de mandato"
  },
  "foto_informe": {
-  "fecha": "2026-11-03",
-  "hora": "07:01",
-  "usdclp": 976.85,
-  "cobre": 6.3715,
-  "brent": 105.75,
-  "oro": 3919.1,
-  "spx": 7541.4,
-  "btc": 76929.66,
-  "vix": 21.45,
-  "us10y": 4.894,
-  "ipsa": 10464.201440163786
+  "fecha": "2026-11-04",
+  "hora": "09:07",
+  "usdclp": 971.43,
+  "cobre": 6.445,
+  "brent": 102.19,
+  "oro": 4050.6,
+  "spx": 7568.92,
+  "btc": 78249.99,
+  "vix": 18.13,
+  "us10y": 4.952,
+  "ipsa": 10400.0
  },
  "dolar_cierre": {
   "fecha": "2026-11-03",
