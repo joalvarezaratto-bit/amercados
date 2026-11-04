@@ -3,7 +3,8 @@
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-11-04": [
-   13
+   13,
+   18
   ]
  },
  "aviso_salud": "2026-11-04",
@@ -15,12 +16,12 @@
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-11-03",
-  "price": 10400.0,
+  "fecha": "2026-11-04",
+  "price": 10500.0,
   "chg": null,
-  "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9TS0ZMekZKZnpMaFZMS0hwazRyekt5Q0lLd1gtcC1KWGhQc2Jxay1TNWt2QV9MYzFWVV91MWJMVEFHSXMyX0phcnJsM3B1cDhkN3h6djVDb3k1cmphUmN5V3ZVaUtDOUJn?oc=5",
-  "texto": "IPSA sube a bordear 10.400 puntos mientras el petr\u00f3leo contin\u00faa en baja y EEUU inicia las elecciones de mitad de mandato"
+  "fuente": "Epicentro Chile",
+  "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQU3pLUjhZR0NjV21kdlNmVzZrNWhBTi1HLXVId0plbUUtRmRoVDRzU1RMcENyYVBnY1d1Mk9qRGp3WmREMmNzWEIyQVhiZDFxQzdsLUNoeWp0dU9NS3dxRmxVcmFZZDdyT2FraklBZmRhU3JfRTd0N0w2bzJvenVSSkxWQU5QY2I2ZjJfUk9oUkpscXZYQ2FLN3pKU1QxRWZybThrUFJiSFhyOWJ1cHhSN0VQa0hFN3dsM3VvZGM5SUs5SEFvUUE?oc=5",
+  "texto": "Bolsa chilena sube con fuerza: IPSA supera los 10.500 puntos tras elecciones en EE.UU."
  },
  "foto_informe": {
   "fecha": "2026-11-04",
@@ -37,8 +38,8 @@
  },
  "dolar_cierre": {
   "fecha": "2026-11-04",
-  "price": 964.49,
-  "hora": "16:44"
+  "price": 965.6,
+  "hora": "18:00"
  },
  "aviso_faltante": "2026-09-08"
 }
