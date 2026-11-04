@@ -1,0 +1,40 @@
+{
+  "_nota": "Calendario de publicacion de estados financieros de empresas chilenas. 'confirmado' = fecha oficial (CMF / hecho esencial / tabla del usuario). Los trimestres que no esten aqui se ESTIMAN automaticamente a partir del ultimo trimestre confirmado (ver resultados_cl.py). Para cargar un calendario nuevo basta agregar un bloque igual a este.",
+  "trimestres": [
+    {
+      "trimestre": "3Q26",
+      "corte": "2026-09-30",
+      "actualizado": "2026-11-04",
+      "fuente": "CMF, Fechas de divulgación de estados financieros; Banco Santander Chile, Itaú Chile y ENAEX",
+      "fechas": {
+        "2026-10-23": ["Sonda", "Masisa", "Metrogas", "Naturgy Chile Gas Natural"],
+        "2026-10-27": ["Colbún", "Embotelladora Andina", "Empresas Gasco", "Viña Santa Rita"],
+        "2026-10-28": ["Enel Chile", "Enel Generación Chile", "Enel Distribución Chile", "Engie Energía Chile", "Besalco", "Cristalerías de Chile"],
+        "2026-10-29": ["Enel Américas", "Parque Arauco", "Coca-Cola Embonor", "ENAP"],
+        "2026-10-30": ["Banco de Chile", "BCI", "Banco Falabella", "Banco Santander Chile", "Itaú Chile", "Cintac", "Polpaico"],
+        "2026-11-02": ["Entel", "Viña Concha y Toro"],
+        "2026-11-03": ["LATAM Airlines", "CCU", "Mallplaza", "Viña San Pedro Tarapacá"],
+        "2026-11-04": ["Celulosa Arauco y Constitución", "Cencosud Shopping", "Paz Corp"],
+        "2026-11-05": ["Empresas CMPC", "Empresas Copec", "Cencosud", "Agrosuper"],
+        "2026-11-06": ["CAP", "Sociedad Matriz SAAM", "Ingevec", "Inversiones CMPC"],
+        "2026-11-09": ["SMU", "Almendral"],
+        "2026-11-10": ["Falabella", "Sodimac", "Multiexport Foods"],
+        "2026-11-11": ["Salmones Camanchaca"],
+        "2026-11-12": ["Soquimich Comercial"],
+        "2026-11-13": ["Invercap"],
+        "2026-11-17": ["SQM"],
+        "2026-11-19": ["Watt's"],
+        "2026-11-20": ["CSAV/Vapores", "Forus", "Coagra", "Banagro"],
+        "2026-11-23": ["Administradora Americana de Inversiones (AAISA)"],
+        "2026-11-24": ["Camanchaca", "Tricot", "Gasco Inversiones"],
+        "2026-11-25": ["Molymet"],
+        "2026-11-26": ["Aguas Andinas", "IAM", "Blumar", "Copeval", "Nuam"],
+        "2026-11-27": ["ENAEX", "Quiñenco", "Bicecorp", "GTD Grupo Teleductos", "GTD Manquehue", "Clínica Las Condes"]
+      }
+    }
+  ],
+  "confirmadas_sueltas": {
+    "_nota": "Fechas oficiales de trimestres futuros que ya se conocen (pisan la estimacion). Formato: trimestre -> empresa -> fecha.",
+    "4Q26": {"BCI": "2027-02-26"}
+  }
+}

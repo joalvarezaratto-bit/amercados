@@ -90,6 +90,7 @@ def construir(sin_ia=False, verbose=True, guardar_foto=False):
         meta["dolar"] = None
     meta["bolsa"] = _bolsa_santiago(verbose, con_por_que=True)
     meta["cripto"] = _cripto(verbose)
+    meta["resultados_cl"] = _resultados_cl(ahora, verbose)
     meta["delta"] = _delta_informe(D, meta, ahora, guardar=guardar_foto)
     if verbose:
         print(f"   {len(A)} eventos · noticias...")
@@ -138,6 +139,41 @@ def construir(sin_ia=False, verbose=True, guardar_foto=False):
     return ruta, cont, meta
 
 
+def _resultados_cl(ahora, verbose=True):
+    """Calendario de resultados de empresas chilenas para el informe:
+    temporada, proximos 10 dias y titulares de prensa de los ultimos 3 dias habiles."""
+    try:
+        import resultados_cl as R
+        hoy = ahora.date()
+        cal = R.calendario()
+        recientes, f = [], hoy
+        for _ in range(3):
+            f = R.dia_habil_anterior(f)
+            recientes += R.del_dia(f, cal)
+        if ahora.hour >= 17:
+            recientes = R.del_dia(hoy, cal) + recientes
+        prensa = R.prensa_de([(x["empresa"], x["fecha"]) for x in recientes], max_busquedas=14)
+        r = {"temporada": R.temporada(hoy, cal), "proximos": R.proximos(hoy, 10, cal),
+             "proxima": R.proxima_temporada(hoy, cal), "prensa": prensa,
+             "trim_prensa": {x["empresa"]: x["trimestre"] for x in recientes},
+             "origen": R.ultimo_actualizado()}
+        if verbose:
+            print(f"   resultados Chile: {len(r['proximos'])} próximos · {len(prensa)} titulares de prensa")
+        return r
+    except Exception as e:
+        print("   (aviso) calendario de resultados falló:", str(e)[:80])
+        return None
+
+
+def _texto_resultados_tg(ahora):
+    try:
+        import resultados_cl as R
+        return R.bloque_telegram(ahora.date(), con_prensa=True, semana=ahora.weekday() == 0)
+    except Exception as e:
+        print("   (aviso) resultados Chile (Telegram):", str(e)[:80])
+        return ""
+
+
 def _texto_plano(s):
     s = re.sub(r"<a [^>]*>", "", s).replace("</a>", "")
     s = re.sub(r"<span[^>]*>", "", s).replace("</span>", "")
@@ -163,10 +199,20 @@ def enviar(ruta, cont, meta):
     if cont.get("modo") != "ia":
         L.append(f"\n<i>Edición por reglas (IA no disponible: {meta.get('ia_motivo')})</i>")
     ok2 = T.send(("\n".join(L))[:4000])
+    rtg = _texto_resultados_tg(ahora)
+    if rtg:
+        T.send(rtg[:4000])
     if ok and ok2:
         s = _state()
         s["ultimo_envio"] = ahora.strftime("%Y-%m-%d")
         s["ultimo_modo"] = cont.get("modo")
+        try:
+            import resultados_cl as _R
+            av = _R.aviso_cargar(ahora.date(), s)
+            if av:
+                T.send(av)
+        except Exception:
+            pass
         _save_state(s)
         # todo lo que salió en el informe ya está "visto": el flash traerá solo lo nuevo
         import noticias
@@ -292,6 +338,7 @@ def actualizar(gate=False):
         import bolsa as _BLa
         _BLa.guardar_monto_sesion(meta["bolsa"])
     meta["cripto"] = _cripto(True)
+    meta["resultados_cl"] = _resultados_cl(ahora, True)
     meta["delta"] = _delta_informe(D, meta, ahora, guardar=False)
     cont = ed["cont"]
     N = {}
@@ -525,12 +572,20 @@ def flash(gate=False):
         for r in res[:5]:
             L.append(f"• {r['hora']} {r['titulo']}: <b>{r['actual']}</b>"
                      + (f" (esperado {r['forecast']})" if r['forecast'] else ""))
+    try:
+        import resultados_cl as _R
+        rf_txt = _R.bloque_flash(ahora.date())
+    except Exception as e:
+        rf_txt = ""
+        print("   (aviso) resultados Chile (flash):", str(e)[:80])
     if C.PAGES_URL:
         L.append("")
         L.append(f"🔗 Informe completo actualizado: {C.PAGES_URL}")
     L.append("")
     L.append(f"<i>Foto del momento, no pronóstico. Datos hasta las {ahora:%H:%M}.</i>")
     ok = T.send("\n".join(L)[:4000])
+    if ok and rf_txt:
+        T.send(rf_txt[:4000])
     if ok:
         noticias.marcar_vistas(nuevas)
         s = _state()

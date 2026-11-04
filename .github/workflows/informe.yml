@@ -44,6 +44,7 @@ jobs:
             git add noticias_vistas.json 2>/dev/null || true
             git add edicion_hoy.json 2>/dev/null || true
             git add volumen_hist.json 2>/dev/null || true
+            git add resultados_prensa.json 2>/dev/null || true
             if git commit -q -m "informe $(TZ=America/Santiago date +%Y-%m-%d\ %H:%M)"; then
               git pull -q --rebase --autostash || true
               git push -q || echo "no se pudo subir; se reintenta en la proxima vuelta"

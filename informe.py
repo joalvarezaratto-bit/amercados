@@ -263,6 +263,12 @@ CSS = r"""
   .ag-row .e{line-height:1.35;} .ag-row .e small{display:block;color:var(--soft);font-size:.7rem;font-family:var(--f-mono);margin-top:2px;}
   .pill{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap;}
   .pill.alto{background:var(--redbg);color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);}
+  .pill.conf{background:var(--greenbg);color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent);}
+  .pill.est{background:transparent;color:var(--soft);border-color:var(--line2);border-style:dashed;}
+  .rcl-bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px;}
+  .rcl-bar i{display:block;height:100%;background:var(--copper);border-radius:999px;}
+  .rcl-meta{font-size:.68rem;color:var(--soft);font-family:var(--f-mono);letter-spacing:.04em;}
+  .ag-row.hoy{background:color-mix(in srgb,var(--copper) 10%,transparent);border-radius:6px;padding-left:6px;padding-right:6px;}
   .pill.medio{background:var(--coppersoft);color:var(--copper);border-color:color-mix(in srgb,var(--copper) 40%,transparent);}
   .pill.bajo{background:var(--bg2);color:var(--soft);border-color:var(--line);}
   td.t{font-family:var(--f-body);}
@@ -786,6 +792,53 @@ def _sec_agenda(A, meta):
     return out
 
 
+def _sec_resultados_cl(r, ahora):
+    """Calendario de resultados de empresas chilenas (resultados_cl.py)."""
+    if not r:
+        return ""
+    import resultados_cl as R
+    hoy = ahora.date()
+    out = '<h3>Resultados de empresas chilenas</h3>'
+    t = r.get("temporada")
+    if t:
+        pct_ = round(100 * t["publicadas"] / max(1, t["total"]))
+        out += (f'<div class="rcl-meta">Temporada {t["trimestre"]} · {t["publicadas"]} de {t["total"]} empresas ya publicaron'
+                f'{" · fechas estimadas" if t["estado"] == "estimada" else ""}</div>'
+                f'<div class="rcl-bar"><i style="width:{pct_}%"></i></div>')
+    pr = r.get("prensa") or {}
+    if pr:
+        out += '<h3>Lo que informaron</h3><div class="news">' + "".join(
+            f'<div class="nw"><a href="{html.escape(v.get("link") or "")}">{html.escape(v["titulo"])}</a>'
+            f'<div class="m"><span class="tg">{html.escape(" · ".join(emps))}</span><span>{html.escape(v.get("fuente") or "")}</span>'
+            f'<span class="hc">resultados {html.escape(r.get("trim_prensa", {}).get(emps[0], ""))}</span></div></div>'
+            for v, emps in R.agrupar_prensa(pr)[:8]) + "</div>"
+    prox = r.get("proximos") or []
+    if prox:
+        grupos = {}
+        for x in prox:
+            grupos.setdefault(x["fecha"], []).append(x)
+        dias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+        for f in sorted(grupos):
+            delta = (f - hoy).days
+            cuando = "hoy" if delta == 0 else ("mañana" if delta == 1 else f"en {delta} días")
+            out += f'<div class="ag-day"><b>{dias[f.weekday()].capitalize()} {_fecha_corta(f)}</b><span>{cuando}</span></div>'
+            for x in grupos[f]:
+                est = x["estado"] == "estimada"
+                out += (f'<div class="ag-row{" hoy" if delta == 0 else ""}"><span class="h">{x["trimestre"]}</span>'
+                        f'<span class="e">{html.escape(x["empresa"])}</span>'
+                        f'<span class="pill {"est" if est else "conf"}">{"estimada" if est else "confirmada"}</span></div>')
+    else:
+        p = r.get("proxima")
+        out += ("<p>Sin publicaciones de estados financieros en los próximos días."
+                + (f' La temporada {p["trimestre"]} parte el {R.fecha_corta(p["inicio"])}'
+                   + (" (fecha estimada)." if p["estado"] == "estimada" else ".") if p else "") + "</p>")
+    q, act, fuente = r.get("origen") or ("", "", "")
+    out += (f'<p class="rcl-meta">Fechas de publicación de estados financieros, no de conferencias. Confirmadas: {html.escape(fuente)} '
+            f'({html.escape(q)}, actualizado {html.escape(act)}). Las "estimadas" se proyectan desde el último trimestre '
+            "y el plazo legal de la CMF; se reemplazan al cargar el calendario oficial.</p>")
+    return out
+
+
 _COLORES = {
     "#C97A45": "var(--copper)", "#C1655A": "var(--red)", "#5FA97E": "var(--green)", "#EDEDEA": "var(--ink)",
     "#8B9099": "var(--soft)", "#15171A": "var(--bg)", "#E3C9AE": "var(--copper-ink)", "#D3D4D2": "var(--text)",
@@ -937,7 +990,7 @@ def render(D, N, A, cont, meta, tz):
           + '<div class="tab-panel" data-tab="glob">' + _sec_bolsa(D, tz) + "</div>"
           + _titulares(cont, "bolsa", "Bolsa"))
     s10 = _sec_cripto(meta.get("cripto"), cont, tz)
-    s11 = _sec_agenda(A, meta)
+    s11 = _sec_agenda(A, meta) + _sec_resultados_cl(meta.get("resultados_cl"), ahora)
     s12 = _li(cont["riesgos"])
     cuerpos = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12]
     titulos = ["Lo más relevante", "Panorama internacional", "Chile: política y economía", "Riesgos geopolíticos",
