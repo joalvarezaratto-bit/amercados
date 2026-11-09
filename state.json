@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-11-06",
+ "ultimo_envio": "2026-11-09",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-11-06": [
@@ -7,7 +7,7 @@
    18
   ]
  },
- "aviso_salud": "2026-11-06",
+ "aviso_salud": "2026-11-09",
  "actualizaciones": {
   "2026-11-06": [
    13,
@@ -24,17 +24,16 @@
   "texto": "Bolsa chilena sube con fuerza: IPSA supera los 10.500 puntos tras elecciones en EE.UU."
  },
  "foto_informe": {
-  "fecha": "2026-11-06",
+  "fecha": "2026-11-09",
   "hora": "07:02",
-  "usdclp": 977.69,
-  "cobre": 6.266,
-  "brent": 96.79,
-  "oro": 4082.6,
-  "spx": 7353.73,
-  "btc": 76062.44,
-  "vix": 25.54,
-  "us10y": 4.837,
-  "ipsa": 10331.36549725208
+  "usdclp": 975.74,
+  "cobre": 6.3145,
+  "brent": 97.38,
+  "oro": 4106.3,
+  "spx": 7376.86,
+  "btc": 74172.39,
+  "vix": 24.34,
+  "us10y": 4.859
  },
  "dolar_cierre": {
   "fecha": "2026-11-06",
