@@ -10,7 +10,8 @@
  "aviso_salud": "2026-11-09",
  "actualizaciones": {
   "2026-11-09": [
-   10
+   10,
+   16
   ]
  },
  "ipsa_cierre": {
@@ -34,9 +35,9 @@
   "us10y": 4.859
  },
  "dolar_cierre": {
-  "fecha": "2026-11-06",
-  "price": 975.74,
-  "hora": "19:04"
+  "fecha": "2026-11-09",
+  "price": 967.0,
+  "hora": "17:42"
  },
  "aviso_faltante": "2026-09-08"
 }
