@@ -2,23 +2,24 @@
  "ultimo_envio": "2026-11-13",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-11-12": [
-   18
+  "2026-11-13": [
+   13
   ]
  },
  "aviso_salud": "2026-11-13",
  "actualizaciones": {
   "2026-11-13": [
-   10
+   10,
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-11-04",
-  "price": 10500.0,
+  "fecha": "2026-11-13",
+  "price": 10700.0,
   "chg": null,
-  "fuente": "Epicentro Chile",
-  "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQU3pLUjhZR0NjV21kdlNmVzZrNWhBTi1HLXVId0plbUUtRmRoVDRzU1RMcENyYVBnY1d1Mk9qRGp3WmREMmNzWEIyQVhiZDFxQzdsLUNoeWp0dU9NS3dxRmxVcmFZZDdyT2FraklBZmRhU3JfRTd0N0w2bzJvenVSSkxWQU5QY2I2ZjJfUk9oUkpscXZYQ2FLN3pKU1QxRWZybThrUFJiSFhyOWJ1cHhSN0VQa0hFN3dsM3VvZGM5SUs5SEFvUUE?oc=5",
-  "texto": "Bolsa chilena sube con fuerza: IPSA supera los 10.500 puntos tras elecciones en EE.UU."
+  "fuente": "Diario Financiero",
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1NX1QyNS1hNDYySENtRTAtYnprbF9IWVY4LVAtSm9HdG5ocndFOV9Pekl2R19KRm45S2R6WXV0dUNEeGJmVlYwNk01c1UzZFE2Y0NEeTFWdlpVdnN0NTVUemk5QzRESjZm?oc=5",
+  "texto": "Bolsa chilena vuelve a subir y el IPSA ronda los 10.700 puntos tras leve sorpresa a la baja en los precios al productor de EEUU"
  },
  "foto_informe": {
   "fecha": "2026-11-13",
