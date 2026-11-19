@@ -2,12 +2,11 @@
  "ultimo_envio": "2026-11-19",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-11-18": [
-   13,
+  "2026-11-19": [
    18
   ]
  },
- "aviso_salud": "2026-11-18",
+ "aviso_salud": "2026-11-19",
  "actualizaciones": {
   "2026-11-19": [
    10,
@@ -36,8 +35,8 @@
  },
  "dolar_cierre": {
   "fecha": "2026-11-19",
-  "price": 1014.78,
-  "hora": "17:35"
+  "price": 1014.98,
+  "hora": "18:01"
  },
  "aviso_faltante": "2026-09-08"
 }
