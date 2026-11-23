@@ -1,5 +1,5 @@
 {
- "ultimo_envio": "2026-11-20",
+ "ultimo_envio": "2026-11-23",
  "ultimo_modo": "reglas",
  "flashes": {
   "2026-11-20": [
@@ -7,7 +7,7 @@
    18
   ]
  },
- "aviso_salud": "2026-11-20",
+ "aviso_salud": "2026-11-23",
  "actualizaciones": {
   "2026-11-20": [
    10,
@@ -24,16 +24,16 @@
   "texto": "Bolsa chilena vuelve a subir y el IPSA ronda los 10.700 puntos tras leve sorpresa a la baja en los precios al productor de EEUU"
  },
  "foto_informe": {
-  "fecha": "2026-11-20",
-  "hora": "09:52",
-  "usdclp": 1018.21,
-  "cobre": 5.534,
-  "brent": 89.27,
-  "oro": 3571.1,
-  "spx": 7175.83,
-  "btc": 61613.25,
-  "vix": 30.71,
-  "us10y": 5.052
+  "fecha": "2026-11-23",
+  "hora": "07:01",
+  "usdclp": 1022.08,
+  "cobre": 5.532,
+  "brent": 89.58,
+  "oro": 3616.8,
+  "spx": 6910.39,
+  "btc": 61396.99,
+  "vix": 30.46,
+  "us10y": 4.912
  },
  "dolar_cierre": {
   "fecha": "2026-11-20",
