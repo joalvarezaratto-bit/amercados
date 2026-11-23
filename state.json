@@ -2,8 +2,7 @@
  "ultimo_envio": "2026-11-23",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-11-20": [
-   13,
+  "2026-11-23": [
    18
   ]
  },
@@ -36,8 +35,8 @@
  },
  "dolar_cierre": {
   "fecha": "2026-11-23",
-  "price": 1016.23,
-  "hora": "17:12"
+  "price": 1016.0,
+  "hora": "18:03"
  },
  "aviso_faltante": "2026-09-08"
 }
