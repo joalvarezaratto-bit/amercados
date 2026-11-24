@@ -2,25 +2,23 @@
  "ultimo_envio": "2026-11-24",
  "ultimo_modo": "reglas",
  "flashes": {
-  "2026-11-23": [
-   18
+  "2026-11-24": [
+   13
   ]
  },
- "aviso_salud": "2026-11-23",
+ "aviso_salud": "2026-11-24",
  "actualizaciones": {
-  "2026-11-23": [
-   10,
-   16,
-   19
+  "2026-11-24": [
+   13
   ]
  },
  "ipsa_cierre": {
-  "fecha": "2026-11-13",
-  "price": 10700.0,
+  "fecha": "2026-11-24",
+  "price": 10300.0,
   "chg": null,
   "fuente": "Diario Financiero",
-  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1NX1QyNS1hNDYySENtRTAtYnprbF9IWVY4LVAtSm9HdG5ocndFOV9Pekl2R19KRm45S2R6WXV0dUNEeGJmVlYwNk01c1UzZFE2Y0NEeTFWdlpVdnN0NTVUemk5QzRESjZm?oc=5",
-  "texto": "Bolsa chilena vuelve a subir y el IPSA ronda los 10.700 puntos tras leve sorpresa a la baja en los precios al productor de EEUU"
+  "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBaRUkyeU5waG5OV29CTmt3QV83YktxT2M4SWhDR2tMaXRxV0tmMklMNm5HSjkza0cyLUdEVC1NVVk3UGNIc0JOSVFfRlppcXU5T0RlWlNldmdJeF9UaGpMd3g0blpIZUpk?oc=5",
+  "texto": "Bolsa chilena cae fuerte y el IPSA pierde los 10.300 puntos mientras la aversi\u00f3n al riesgo vuelve a apoderarse de los mercados burs\u00e1tiles"
  },
  "foto_informe": {
   "fecha": "2026-11-24",
