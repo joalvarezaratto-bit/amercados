@@ -1,6 +1,6 @@
 {
- "ultimo_envio": "2026-11-25",
- "ultimo_modo": "reglas",
+ "ultimo_envio": "2026-11-26",
+ "ultimo_modo": "ia",
  "flashes": {
   "2026-11-25": [
    13
@@ -23,17 +23,17 @@
   "texto": "Bolsa chilena cae fuerte y el IPSA pierde los 10.300 puntos mientras la aversi\u00f3n al riesgo vuelve a apoderarse de los mercados burs\u00e1tiles"
  },
  "foto_informe": {
-  "fecha": "2026-11-25",
-  "hora": "11:20",
-  "usdclp": 1043.79,
-  "cobre": 5.352,
-  "brent": 89.33,
-  "oro": 3509.0,
-  "spx": 7201.09,
-  "btc": 58289.82,
-  "vix": 31.56,
-  "us10y": 4.834,
-  "ipsa": 10195.311483387799
+  "fecha": "2026-11-26",
+  "hora": "07:52",
+  "usdclp": 1038.07,
+  "cobre": 5.45,
+  "brent": 90.68,
+  "oro": 3580.8,
+  "spx": 7182.78,
+  "btc": 60442.42,
+  "vix": 27.22,
+  "us10y": 4.848,
+  "ipsa": 10375.542112278088
  },
  "dolar_cierre": {
   "fecha": "2026-11-25",
